@@ -1,6 +1,6 @@
 # Comandante 
 
-![Alt text](/logo.png?raw=true "Comandante")
+![Alt text](/logo.png?raw=true&thumbnail "Comandante")
 
 A toolkit for building command-line interfaces in Python.
 
