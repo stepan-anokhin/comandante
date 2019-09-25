@@ -1,10 +1,8 @@
-# Comandante 
-
-<p align="left">
-    <img src="/logo.png?raw=true" width="100">
+<p align="center">
+    <img src="/logo.png?raw=true" width="200">
 </p>
 
-A toolkit for building command-line interfaces in Python.
+Comandante is a toolkit for building command-line interfaces in Python.
 
 ## Table of Contents
 - [Installation](#installation)
