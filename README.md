@@ -1,6 +1,8 @@
 # Comandante 
 
-![Comandante](/logo.png?raw=true&thumbnail "Comandante" | width=100)
+<p align="left">
+    <img src="/logo.png?raw=true" width="100">
+</p>
 
 A toolkit for building command-line interfaces in Python.
 
