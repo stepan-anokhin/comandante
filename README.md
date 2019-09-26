@@ -11,6 +11,14 @@ Comandante is a toolkit for building command-line interfaces in Python.
 - [Subcommands](#subcommands)
 
 ## Installation
+
+Comandante is available on PyPI. 
+To get the latest release simply install it with a `pip` tool.
+
+```shell
+pip3 install --upgrade comandante
+```
+
 ## Getting Started
 
 ```python
