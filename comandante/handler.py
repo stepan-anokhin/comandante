@@ -45,6 +45,9 @@ class Handler:
 
     def invoke(self, *argv):
         """Invoke cli-handler with the given raw command-line arguments."""
+        if len(argv) == 0:
+            self.help()
+            return
         command_name, argv = argv[0], argv[1:]
         if command_name not in self._commands:
             self._print("Unknown command: '{name}'".format(name=command_name))
