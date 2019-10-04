@@ -6,3 +6,6 @@
 build
 dist
 comandante.egg-info
+
+# cache
+**/__pycache__
