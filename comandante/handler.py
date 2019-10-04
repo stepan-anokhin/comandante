@@ -56,7 +56,7 @@ class Handler:
 
         try:
             command = self._commands.get(command_name, self.help)
-            command.invoke(*argv)
+            return command.invoke(*argv)
         except CliSyntaxException as e:
             self._print(str(e))
             self.help(command_name)
