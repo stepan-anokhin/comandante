@@ -83,6 +83,11 @@ class Handler:
         """Get long handler description."""
         return self._descr
 
+    def subcommand(self, name, handler):
+        if name in self._commands:
+            raise RuntimeError("Duplicate command name: {name}".format(name=name))
+        self._commands[name] = handler
+
     def option(self, name, short, type, default):
         """Declare a new option.
 
@@ -113,4 +118,10 @@ class Handler:
 
     @property
     def options(self):
+        """Get option values."""
         return self._options
+
+    def __getattr__(self, item):
+        if item not in self._commands:
+            raise AttributeError("{type} object has no attribute {name}".format(type=type(self).__name__, name=item))
+        return self._commands[item]
