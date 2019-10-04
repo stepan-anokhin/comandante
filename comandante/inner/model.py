@@ -283,8 +283,29 @@ class Signature:
 
 
 class Command:
+    """Cli-command.
+
+    Command represents a single command-line interface method.
+    In comandante `Command` is a wrapper around ordinary
+    python function, method (or any callable object).
+
+    Command may have arguments. Arguments are parameters
+    essential to the command logic.
+
+    Command may have options. Options are parameters that
+    are not directly involved in command logic, but may
+    affect it's operation in some way.
+    """
+
     @staticmethod
     def from_function(func, name, is_method):
+        """Create a new command from the given callable object.
+
+        :param func: a callable object to wrap command around
+        :param name: override command name
+        :param is_method: indicates whether the underlying `func` accepts `self` as a first argument
+        :return: a new Command initialized from the given `func`
+        """
         name = name or func.__name__
         brief, descr = describe(func)
         return Command(
@@ -296,6 +317,14 @@ class Command:
         )
 
     def __init__(self, func, name, signature, brief, descr):
+        """Initialize instance.
+
+        :param func: underlying callable object
+        :param name: command name
+        :param signature: command signature
+        :param brief: command brief description
+        :param descr: command long description
+        """
         self._func = func
         self._name = name
         self._signature = signature
@@ -305,49 +334,67 @@ class Command:
         self._declared_options_short = {}
 
     def declare_option(self, name, short, type, default):
+        """Declare a new option for the given command.
+
+
+        :param name: option name
+        :param short: option short name
+        :param type: option type
+        :param default: option default value
+        """
         option = Option(name=name, short=short, type=type, default=default)
         self._declared_options[option.name] = option
         self._declared_options_short[option.short] = option
 
     @property
     def func(self):
+        """Get underlying callable object."""
         return self._func
 
     @property
     def name(self):
+        """Get command name."""
         return self._name
 
     @property
     def signature(self):
+        """Get command signature."""
         return self._signature
 
     @property
     def brief(self):
+        """Get command brief description."""
         return self._brief
 
     @property
     def descr(self):
+        """Get command long description."""
         return self._descr
 
     @property
     def declared_options(self):
+        """Get command options."""
         return self._declared_options  # TODO: use immutable proxy
 
     def __call__(self, *args, **kwargs):
+        """Redirect function-like calls to the underlying function/method."""
         return self.func(*args, **kwargs)
 
     def invoke(self, handler, *argv):
+        """Invoke command with the raw command-line arguments."""
         parser = Parser(self._all_options(handler), self.signature.arguments, self.signature.vararg)
         options, arguments = parser.parse(argv)
         return self._do_invoke(handler, arguments, options)
 
     def _all_options(self, handler):
+        """Merge all declared options."""
         options = {}
         options.update(handler.declared_options)
         options.update(self.declared_options)
         return options.values()
 
     def _do_invoke(self, handler, arguments, options):
+        """Do invoke command with parsed arguments and option values."""
         if self.signature.is_method:
             arguments = (handler.with_options(**options),) + tuple(arguments)
         if self.signature.accepts_options:
