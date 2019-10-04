@@ -110,3 +110,7 @@ class Handler:
         :param options: option values as kv-args
         """
         return HandlerProxy(self, options)
+
+    @property
+    def options(self):
+        return self._options
