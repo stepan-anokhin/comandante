@@ -62,7 +62,16 @@ class Parser:
             if name in options:
                 raise CliSyntaxException("Duplicated option: '{name}'".format(name=name))
             options[name] = value
-        return options, reversed(remain)
+
+        merged_options = self._default_options()
+        merged_options.update(options)
+        return merged_options, reversed(remain)
+
+    def _default_options(self):
+        result = {}
+        for option in self._options:
+            result[option.name] = option.default
+        return result
 
     @staticmethod
     def _more_options(remain):
