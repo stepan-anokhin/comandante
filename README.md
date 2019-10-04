@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://raw.githubusercontent.com/stepan-anokhin/comandante/master/logo.png" width="200" alt="Comandante Logo">
+    <img src="https://raw.githubusercontent.com/stepan-anokhin/comandante/master/logo.png" width="500" alt="Comandante Logo">
 </p>
 
 Comandante is a toolkit for building command-line interfaces in Python.
