@@ -54,7 +54,7 @@ class Option:
     # Regex-pattern of valid option name.
     # Valid option name starts with alphabetic character and
     # its tail contain any number of alpha-numeric characters.
-    _name_pattern = re.compile(r'\a\w+')
+    _name_pattern = re.compile(r'[a-zA-Z]\w+')
 
     @staticmethod
     def is_valid_name(name):
