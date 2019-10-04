@@ -24,8 +24,8 @@ pip3 install --upgrade comandante
 In comandante command-line interface is represented 
 by the `comandante.Handler` class and its descendants.
 
-Each `Handler`'s method decorated with `comandante.command()`
-decorator will become a CLI command. 
+Each `Handler`'s method decorated with `@comandante.command()`
+will become a CLI command. 
 
 ```python
 #!/usr/bin/env python3
