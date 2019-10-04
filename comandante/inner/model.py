@@ -15,6 +15,9 @@ import inspect
 import itertools
 import re
 
+from comandante.inner.helpers import describe
+from comandante.inner.parser import Parser
+
 
 class _Empty:
     """Marker object for Argument.empty"""
@@ -277,3 +280,76 @@ class Signature:
     def is_method(self):
         """Check if the underlying python function is method accepting `self` as a first argument."""
         return self._is_method
+
+
+class Command:
+    @staticmethod
+    def from_function(func, name, is_method):
+        name = name or func.__name__
+        brief, descr = describe(func)
+        return Command(
+            func=func,
+            name=name,
+            signature=Signature.from_function(func, is_method),
+            brief=brief,
+            descr=descr
+        )
+
+    def __init__(self, func, name, signature, brief, descr):
+        self._func = func
+        self._name = name
+        self._signature = signature
+        self._brief = brief
+        self._descr = descr
+        self._declared_options = {}
+        self._declared_options_short = {}
+
+    def declare_option(self, name, short, type, default):
+        option = Option(name=name, short=short, type=type, default=default)
+        self._declared_options[option.name] = option
+        self._declared_options_short[option.short] = option
+
+    @property
+    def func(self):
+        return self._func
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def signature(self):
+        return self._signature
+
+    @property
+    def brief(self):
+        return self._brief
+
+    @property
+    def descr(self):
+        return self._descr
+
+    @property
+    def declared_options(self):
+        return self._declared_options  # TODO: use immutable proxy
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+    def invoke(self, handler, *argv):
+        parser = Parser(self._all_options(handler), self.signature.arguments, self.signature.vararg)
+        options, arguments = parser.parse(argv)
+        return self._do_invoke(handler, arguments, options)
+
+    def _all_options(self, handler):
+        options = {}
+        options.update(handler.declared_options)
+        options.update(self.declared_options)
+        return options.values()
+
+    def _do_invoke(self, handler, arguments, options):
+        if self.signature.is_method:
+            arguments = (handler.with_options(**options),) + tuple(arguments)
+        if self.signature.accepts_options:
+            return self.func(*arguments, **options)
+        return self.func(*arguments)
