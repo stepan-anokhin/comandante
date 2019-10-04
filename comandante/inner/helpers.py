@@ -8,6 +8,7 @@ for internal use only.
 """
 
 import inspect
+import itertools
 
 
 def describe(o):
