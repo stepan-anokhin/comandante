@@ -1,4 +1,4 @@
-<p align="left">
+<p align="center">
     <img src="https://raw.githubusercontent.com/stepan-anokhin/comandante/master/logo.png" width="200" alt="Comandante Logo">
 </p>
 
