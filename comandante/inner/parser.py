@@ -134,6 +134,9 @@ class Parser:
                 raise CliSyntaxException("Too many arguments.")
             if argument.is_required() and value is None:
                 raise CliSyntaxException("Required argument is not specified: '{name}'".format(name=argument.name))
+            if not argument.is_required() and value is None:
+                values.append(argument.default)
+                continue
             parse = self._get_argument_parser(argument)
             values.append(parse(value))
         return values
