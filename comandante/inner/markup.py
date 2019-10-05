@@ -124,15 +124,3 @@ class DocstringMarkup:
                     chunk = rule(matched_text)
                     result.append(chunk)
         return ''.join(result)
-
-#
-# print(DocstringMarkup.process_inline_formatting("a normal text"))
-# print(DocstringMarkup.process_inline_formatting("a *bold* word"))
-# print(DocstringMarkup.process_inline_formatting("unmatched *asterisk"))
-# print(DocstringMarkup.process_inline_formatting("\\* escaped and *unmatched asterisk"))
-# print(DocstringMarkup.process_inline_formatting("\\* escaped and *matched* asterisk"))
-# print(DocstringMarkup.process_inline_formatting("a *multiple* bold *words* before *unmatched asterisk"))
-# print(DocstringMarkup.process_inline_formatting("escaped symbols *inside \\\\ \\* a \\bold* text"))
-# print(DocstringMarkup.process_inline_formatting("escaped backslash in front of a \\\\*bold text*"))
-# print(DocstringMarkup.process_inline_formatting("multiple *bold* words *inside* text"))
-# print(DocstringMarkup.process_inline_formatting("non-escaping \\backslash"))
