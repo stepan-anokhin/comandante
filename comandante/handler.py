@@ -77,15 +77,15 @@ class Handler:
         list of commands are printed on the standard output.
         """
         if command is None:
-            self._print(self.full_doc)
+            self._print(self.full_doc())
             return
 
         if command not in self._commands:
             self._print("Unknown command: {name}".format(name=command))
-            self._print(self.full_doc)
+            self._print(self.full_doc())
             return
 
-        self._print(self._commands[command].full_doc)
+        self._print(self._commands[command].full_doc())
 
     def _help_command(self, command_name):
         """Print help for a particular command."""
@@ -104,7 +104,6 @@ class Handler:
         """Get long handler description."""
         return self._descr
 
-    @property
     def full_doc(self):
         """Get full documentation"""
         sections = list()
