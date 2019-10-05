@@ -16,6 +16,7 @@ import itertools
 import re
 
 from comandante.inner.helpers import describe
+from comandante.inner.markup import Ansi, DocstringMarkup
 from comandante.inner.parser import Parser
 
 
@@ -400,3 +401,34 @@ class Command:
         if self.signature.accepts_options:
             return self.func(*arguments, **options)
         return self.func(*arguments)
+
+    def full_doc(self):
+        """Get command full formatted documentation."""
+        sections = list()
+        sections.append(self.brief)
+        sections.append(self._synopsis())
+        sections.append(self._description_section())
+        sections.append(self._options_summary())
+        sections = filter(bool, sections)
+
+        return '\n\n'.join(sections)
+
+    def _synopsis(self):
+        """Get formatted usage."""
+        return Ansi.bold("SYNOPSIS")
+
+    def _options_summary(self):
+        """Get formatted options summary."""
+        # if len(self.declared_options) == 0:
+        #     return
+        heading = Ansi.bold("OPTIONS")
+        body = ""
+        return "{heading}\n{body}".format(heading=heading, body=body)
+
+    def _description_section(self):
+        """Get formatted long description."""
+        if not self.descr:
+            return
+        heading = Ansi.bold("DESCRIPTION")
+        body = DocstringMarkup.process(self.descr)
+        return "{heading}\n{body}".format(heading=heading, body=body)
