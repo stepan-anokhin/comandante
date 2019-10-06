@@ -16,7 +16,7 @@ import itertools
 import re
 
 from comandante.inner.helpers import describe
-from comandante.inner.markup import Ansi, DocstringMarkup
+from comandante.inner.markup import TechWriter
 from comandante.inner.parser import Parser
 
 
@@ -66,13 +66,14 @@ class Option:
         """
         return isinstance(name, str) and bool(Option._name_pattern.fullmatch(name))
 
-    def __init__(self, name, short, type, default):
+    def __init__(self, name, short, type, default, descr=""):
         """Initialize an instance.
 
         :param name: option long name
         :param short: option short name
         :param type: option type
         :param default: option default value
+        :param descr: option description
         """
         if not Option.is_valid_name(name):
             raise ValueError("Not a valid option name: " + str(name))
@@ -81,6 +82,7 @@ class Option:
         self._short = short
         self._type = type
         self._default = default
+        self._descr = descr
 
     @property
     def name(self):
@@ -101,6 +103,11 @@ class Option:
     def default(self):
         """Get option default value."""
         return self._default
+
+    @property
+    def descr(self):
+        """Get option description."""
+        return self._descr
 
 
 class Argument:
@@ -334,7 +341,7 @@ class Command:
         self._declared_options = {}
         self._declared_options_short = {}
 
-    def declare_option(self, name, short, type, default):
+    def declare_option(self, name, short, type, default, descr=""):
         """Declare a new option for the given command.
 
 
@@ -342,8 +349,9 @@ class Command:
         :param short: option short name
         :param type: option type
         :param default: option default value
+        :param descr: option description
         """
-        option = Option(name=name, short=short, type=type, default=default)
+        option = Option(name=name, short=short, type=type, default=default, descr=descr)
         self._declared_options[option.name] = option
         self._declared_options_short[option.short] = option
 
@@ -404,31 +412,5 @@ class Command:
 
     def full_doc(self):
         """Get command full formatted documentation."""
-        sections = list()
-        sections.append(self.brief)
-        sections.append(self._synopsis())
-        sections.append(self._description_section())
-        sections.append(self._options_summary())
-        sections = filter(bool, sections)
-
-        return '\n\n'.join(sections)
-
-    def _synopsis(self):
-        """Get formatted usage."""
-        return Ansi.bold("SYNOPSIS")
-
-    def _options_summary(self):
-        """Get formatted options summary."""
-        # if len(self.declared_options) == 0:
-        #     return
-        heading = Ansi.bold("OPTIONS")
-        body = ""
-        return "{heading}\n{body}".format(heading=heading, body=body)
-
-    def _description_section(self):
-        """Get formatted long description."""
-        if not self.descr:
-            return
-        heading = Ansi.bold("DESCRIPTION")
-        body = DocstringMarkup.process(self.descr)
-        return "{heading}\n{body}".format(heading=heading, body=body)
+        tech_writer = TechWriter()
+        return tech_writer.document_command(self)

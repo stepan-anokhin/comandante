@@ -11,8 +11,8 @@ import comandante.decorators as decor
 
 from comandante.errors import CliSyntaxException
 from comandante.inner.bind import BoundCommand, HandlerProxy
-from comandante.inner.helpers import describe
-from comandante.inner.markup import Ansi, DocstringMarkup
+from comandante.inner.helpers import describe, getname
+from comandante.inner.markup import TechWriter
 from comandante.inner.model import Option
 
 
@@ -28,13 +28,14 @@ class Handler:
     Handler's doc-string will be used by a cli help command.
     """
 
-    def __init__(self):
+    def __init__(self, name=None):
         """Initialize instance.
 
         Among other things this constructor will walk through
         all existing methods and collect those marked as
         cli-commands.
         """
+        self._name = name or getname(type(self)).lower()
         self._commands = {}
         self._declared_options = {}
         self._brief, self._descr = self._describe()
@@ -95,6 +96,10 @@ class Handler:
         print(*args)  # TODO: redirect output
 
     @property
+    def name(self):
+        return self._name
+
+    @property
     def brief(self):
         """Get brief handler description."""
         return self._brief
@@ -106,35 +111,8 @@ class Handler:
 
     def full_doc(self):
         """Get full documentation"""
-        sections = list()
-        sections.append(self.brief)
-        sections.append(self._command_summary())
-        sections.append(self._description_section())
-        sections = filter(bool, sections)
-
-        return '\n\n'.join(sections)
-
-    def _command_summary(self):
-        """Get summary for all defined commands."""
-        names = []
-        briefs = []
-        for name in sorted(self._commands.keys()):
-            names.append(name)
-            briefs.append(self._commands[name].brief)
-        name_column_width = max(map(len, names)) + 4
-
-        lines = [Ansi.bold('COMMANDS')]
-        for name, brief in zip(names, briefs):
-            lines.append("{name:<{width}}#    {brief}".format(name=name, brief=brief, width=name_column_width))
-        return '\n'.join(lines)
-
-    def _description_section(self):
-        """Get formatted description section."""
-        if not self.descr:
-            return
-        heading = Ansi.bold("DESCRIPTION")
-        description_body = DocstringMarkup.process(self.descr)
-        return "{heading}\n{body}".format(heading=heading, body=description_body)
+        tech_writer = TechWriter()
+        return tech_writer.document_handler(self)
 
     def subcommand(self, name, handler):
         """Declare subcommand."""
@@ -162,6 +140,11 @@ class Handler:
     def declared_options(self):
         """Get declared options."""
         return self._declared_options  # TODO: use immutable proxy
+
+    @property
+    def declared_commands(self):
+        """Get declared commands."""
+        return self._commands  # TODO: use immutable proxy
 
     def with_options(self, **options):
         """Get a proxy with options being temporary set to the given values.

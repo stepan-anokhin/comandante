@@ -1,6 +1,8 @@
+import os.path
 import re
+from itertools import filterfalse, takewhile, islice, chain
 
-from comandante.inner.helpers import isblank
+from comandante.inner.helpers import isblank, getname
 
 
 class Ansi:
@@ -124,3 +126,143 @@ class DocstringMarkup:
                     chunk = rule(matched_text)
                     result.append(chunk)
         return ''.join(result)
+
+
+class TechWriter:
+    """Documentation composer for handlers and commands."""
+
+    def __init__(self, markup=DocstringMarkup, indent=' ' * 4):
+        self._markup = markup
+        self._indent_unit = indent
+
+    def markup(self, text):
+        return self._markup.process(text)
+
+    def indent(self, text, amount=1):
+        """Indent entire text with the given amount of indentation units."""
+        lines = text.split('\n')
+        indent = self._indent_unit * amount
+        return '\n'.join(map(indent.__add__, lines))
+
+    @staticmethod
+    def unindent(text):
+        """Remove common indent."""
+        lines = text.split('\n')
+        indent_width = len(TechWriter.indentation(islice(lines, 1, None)))
+        unindented_lines = map(lambda line: line[indent_width:], islice(lines, 1, None))
+        return '\n'.join(chain(islice(lines, 0, 1), unindented_lines))
+
+    @staticmethod
+    def indentation(lines):
+        """Get common blank prefix of all non-blank lines."""
+        non_blank_lines = list(filterfalse(isblank, lines))
+        common_prefix = os.path.commonprefix(non_blank_lines)
+        return ''.join(takewhile(isblank, common_prefix))
+
+    def document_handler(self, handler):
+        sections = list()
+        sections.append(self.name_section(handler))
+        sections.append(self.commands_section(handler))
+        sections.append(self.description_section(handler))
+        return self.compose_sections(sections)
+
+    def document_command(self, command):
+        sections = list()
+        sections.append(self.name_section(command))
+        sections.append(self.synopsis_section(command))
+        sections.append(self.description_section(command))
+        sections.append(self.options_section(command))
+        return self.compose_sections(sections)
+
+    def name_section(self, element):
+        """Create name section for the cli element."""
+        if not element.brief:
+            return None
+
+        text = "{name} - {brief}".format(name=element.name, brief=element.brief)
+        return self.section(heading="name", body=text)
+
+    def commands_section(self, handler):
+        """Get summary for all defined commands."""
+        if not handler.declared_commands:
+            return
+
+        names, briefs = list(), list()
+        for name in sorted(handler.declared_commands.keys()):
+            command = handler.declared_commands[name]
+            names.append(command.name)
+            briefs.append(command.brief)
+        name_column_width = max(map(len, names))
+
+        lines = list()
+        pattern = "{name:<{width}}{indent}#{indent}{brief}"
+        for name, brief in zip(names, briefs):
+            entry = pattern.format(name=name, brief=brief, width=name_column_width, indent=self._indent_unit)
+            lines.append(entry)
+        text = '\n'.join(lines)
+        return self.section(heading="commands", body=text)
+
+    def description_section(self, element):
+        """Get formatted description for cli element."""
+        if not element.descr:
+            return
+
+        text = self.markup(element.descr)
+        return self.section(heading="description", body=text)
+
+    def section(self, heading, body):
+        heading = Ansi.bold(heading.upper())
+        body = self.indent(body)
+        return "{heading}\n{body}".format(heading=heading, body=body)
+
+    @staticmethod
+    def compose_sections(sections):
+        sections = filter(bool, sections)
+        return '\n\n'.join(sections)
+
+    def synopsis_section(self, command):
+        """Get formatted usage."""
+        synopsis = list()
+        synopsis.append(command.name)
+        if command.declared_options:
+            synopsis.append("[OPTIONS]")
+        for argument in command.signature.arguments:
+            pattern = self.argument_pattern(argument)
+            synopsis.append(pattern.format(name=argument.name))
+        synopsis = ' '.join(synopsis)
+
+        return self.section(heading="synopsis", body=synopsis)
+
+    @staticmethod
+    def argument_pattern(argument):
+        """Get argument pattern."""
+        if argument.is_required:
+            return "<{name}>"
+        return "[{name}]"
+
+    def options_section(self, element):
+        """Get cli element options summary."""
+        if not element.declared_options:
+            return
+
+        summarized_options = map(self.summarize_option, element.declared_options.values())
+        summarized_options = '\n\n'.join(summarized_options)
+        return self.section(heading="options", body=summarized_options)
+
+    def summarize_option(self, option):
+        """Get option summary."""
+        pattern = self.option_pattern(option)
+        synopsis = pattern.format(long=option.name, short=option.short, type=getname(option.type))
+        summary = [synopsis]
+
+        if option.descr:
+            description = self.markup(self.unindent(option.descr))
+            summary.append(self.indent(description))
+        return '\n'.join(summary)
+
+    @staticmethod
+    def option_pattern(option):
+        """Get option synopsis pattern."""
+        if option.type is bool:
+            return "-{short}, --{long}"
+        return "-{short} <{type}>, --{long} <{type}>"

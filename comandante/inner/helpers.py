@@ -28,3 +28,10 @@ def describe(o):
     brief = lines[0]
     descr = itertools.dropwhile(isblank, lines[1:])
     return brief, '\n'.join(descr)
+
+
+def getname(o):
+    """Get python object name."""
+    if hasattr(o, '__name__') and o.__name__ is not None:
+        return o.__name__
+    raise ValueError("{object} doesn't have a name".format(object=str(o)))
