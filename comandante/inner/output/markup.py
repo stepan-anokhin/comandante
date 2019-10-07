@@ -26,10 +26,10 @@ class Markup:
     paragraph_format = TokenProcessor(
         escaped_backslash=(r'\\\\', const('\\')),
         escaped_asterisk=(r'\\\*', const('*')),
-        leading_pipe=(r'^\|', const('\n')),
+        leading_pipe=(r'\n\|', const('\n')),
         escaped_leading_pipe=(r'^\\\|', const('|')),
         trailing_spaces=(r'\s+$', const('')),
-        new_line=(r'\n', const(' ')),
+        new_line=(r'\n(?=[^|])', const(' ')),
         bold_text=(
             r'\*(?:[^*\\\n]|\\.)+\*',
             lambda text: Ansi.bold(Markup.bold_format.process(text[1:-1]))
