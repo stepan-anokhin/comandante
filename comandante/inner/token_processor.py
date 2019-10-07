@@ -21,7 +21,7 @@ class TokenProcessor:
             pattern, rule = definition
             token_patterns.append("(?P<{name}>{pattern})".format(name=name, pattern=pattern))
             self._rules[name] = rule
-        self._pattern = re.compile('|'.join(token_patterns))
+        self._pattern = re.compile('|'.join(token_patterns), re.MULTILINE)
 
     @staticmethod
     def _unpack(token):

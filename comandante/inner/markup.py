@@ -1,3 +1,4 @@
+import re
 import textwrap
 
 from comandante.inner.helpers import isblank, getname
@@ -23,14 +24,17 @@ def const(value):
 class Markup:
     """Docstring markup processor."""
 
-    inline_format = TokenProcessor(
+    paragraph_break = re.compile(r'\n\s*\n', re.MULTILINE)
+
+    paragraph_format = TokenProcessor(
         escaped_backslash=(r'\\\\', const('\\')),
         escaped_asterisk=(r'\\\*', const('*')),
         leading_pipe=(r'^\|', const('\n')),
         escaped_leading_pipe=(r'^\\\|', const('|')),
         trailing_spaces=(r'\s+$', const('')),
+        new_line=(r'\n', const(' ')),
         bold_text=(
-            r'\*(?:[^*\\]|\\.)+\*',
+            r'\*(?:[^*\\\n]|\\.)+\*',
             lambda text: Ansi.bold(Markup.bold_format.process(text[1:-1]))
         ),
     )
@@ -41,31 +45,13 @@ class Markup:
     )
 
     @staticmethod
-    def process_lines(doc_lines):
-        """Convert docstring lines into its final representation.
-
-        The following rules are applied:
-         * Blank-lines are converted into the new-line character
-         * Lines not delimited by a blank line will be merged into a single line
-        """
-        paragraphs = []
-        paragraph = []
-
-        for line in doc_lines:
-            if isblank(line) and len(paragraph) == 0:
-                continue
-            elif isblank(line):
-                paragraphs.append(' '.join(paragraph))
-                paragraph = []
-            else:
-                paragraph.append(Markup.inline_format.process(line))
-        if len(paragraph) > 0:
-            paragraphs.append(' '.join(paragraph))
-        return '\n\n'.join(paragraphs)
+    def paragraphs(text):
+        paragraphs = Markup.paragraph_break.split(text)
+        return map(Markup.paragraph_format.process, paragraphs)
 
     @staticmethod
-    def process(docstring):
-        return Markup.process_lines(docstring.split('\n'))
+    def process(text, delimiter='\n\n'):
+        return delimiter.join(Markup.paragraphs(text))
 
 
 class Paragraph:
