@@ -96,7 +96,7 @@ class Paragraph:
         return self._subsequent_indent
 
 
-class TechWriter:
+class HelpWriter:
     """Documentation composer for handlers and commands."""
 
     def __init__(self, markup=Markup, indent=' ' * 4):

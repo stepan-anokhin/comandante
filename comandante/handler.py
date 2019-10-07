@@ -12,7 +12,7 @@ import comandante.decorators as decor
 from comandante.errors import CliSyntaxException
 from comandante.inner.bind import BoundCommand, HandlerProxy
 from comandante.inner.helpers import describe, getname
-from comandante.inner.markup import TechWriter
+from comandante.inner.markup import HelpWriter
 from comandante.inner.model import Option
 
 
@@ -111,8 +111,8 @@ class Handler:
 
     def full_doc(self):
         """Get full documentation"""
-        tech_writer = TechWriter()
-        return tech_writer.document_handler(self)
+        help_writer = HelpWriter()
+        return help_writer.document_handler(self)
 
     def subcommand(self, name, handler):
         """Declare subcommand."""

@@ -16,7 +16,7 @@ import itertools
 import re
 
 from comandante.inner.helpers import describe
-from comandante.inner.markup import TechWriter
+from comandante.inner.markup import HelpWriter
 from comandante.inner.parser import Parser
 
 
@@ -412,5 +412,5 @@ class Command:
 
     def full_doc(self):
         """Get command full formatted documentation."""
-        tech_writer = TechWriter()
-        return tech_writer.document_command(self)
+        help_writer = HelpWriter()
+        return help_writer.document_command(self)
