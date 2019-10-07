@@ -27,6 +27,9 @@ class DocstringMarkup:
             r'(?P<escaped_backslash>\\\\)',
             r'(?P<escaped_asterisk>\\\*)',
             r'(?P<bold_text>\*(?:[^*\\]|\\.)+\*)',
+            r'(?P<leading_pipe>^\|)',
+            r'(?P<escaped_leading_pipe>^\\\|)',
+            r'(?P<trailing_spaces>\s+$)',
         ]
         pattern = re.compile('|'.join(tokens))
 
@@ -34,7 +37,10 @@ class DocstringMarkup:
         rules = dict(
             escaped_backslash=lambda text: '\\',
             escaped_asterisk=lambda text: '*',
+            leading_pipe=lambda text: '\n',
+            escaped_leading_pipe=lambda text: '|',
             bold_text=lambda text: DocstringMarkup.process_bold_body(text[1:-1]),
+            trailing_spaces=lambda text: ''
         )
 
     class BoldBody:
@@ -51,21 +57,6 @@ class DocstringMarkup:
             escaped_backslash=lambda text: '\\',
             escaped_asterisk=lambda text: '*',
         )
-
-    @staticmethod
-    def process_line(line):
-        """Process single docstring line."""
-        # process leading |
-        if line.startswith('|'):
-            line = '\n' + line[1:]
-        # process escaped leading |
-        elif line.startswith('\\|'):
-            line = '|' + line[2:]
-        # process inline formatting
-        line = DocstringMarkup.process_inline_formatting(line)
-        # process trailing white spaces
-        line = line.rstrip()
-        return line
 
     @staticmethod
     def process_lines(doc_lines):
@@ -95,7 +86,7 @@ class DocstringMarkup:
         return DocstringMarkup.process_lines(docstring.split('\n'))
 
     @staticmethod
-    def process_inline_formatting(line):
+    def process_line(line):
         inline = DocstringMarkup.Inline
         return DocstringMarkup.process_tokens(line, inline.pattern, inline.rules)
 

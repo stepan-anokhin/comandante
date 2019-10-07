@@ -57,3 +57,7 @@ class DocstringMarkupTests(unittest.TestCase):
     def test_non_escaping_backslash(self):
         self.assert_process("non escaping \\backslash",
                             "non escaping \\backslash")
+
+    def test_trailing_spaces(self):
+        self.assert_process("with trailing spaces    ",
+                            "with trailing spaces")
