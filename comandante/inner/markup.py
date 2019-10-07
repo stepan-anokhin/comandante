@@ -1,8 +1,8 @@
-import re
 import textwrap
 
 from comandante.inner.helpers import isblank, getname
 from comandante.inner.terminal import Terminal
+from comandante.inner.token_processor import TokenProcessor
 
 
 class Ansi:
@@ -16,47 +16,29 @@ class Ansi:
         return "{format}{text}{end}".format(format=Ansi.BOLD, text=text, end=Ansi.NORMAL)
 
 
-class DocstringMarkup:
+def const(value):
+    return lambda _: value
+
+
+class Markup:
     """Docstring markup processor."""
 
-    class Inline:
-        """Lexical rules to process inline formatting."""
+    inline_format = TokenProcessor(
+        escaped_backslash=(r'\\\\', const('\\')),
+        escaped_asterisk=(r'\\\*', const('*')),
+        leading_pipe=(r'^\|', const('\n')),
+        escaped_leading_pipe=(r'^\\\|', const('|')),
+        trailing_spaces=(r'\s+$', const('')),
+        bold_text=(
+            r'\*(?:[^*\\]|\\.)+\*',
+            lambda text: Ansi.bold(Markup.bold_format.process(text[1:-1]))
+        ),
+    )
 
-        # inline formatting tokens
-        tokens = [
-            r'(?P<escaped_backslash>\\\\)',
-            r'(?P<escaped_asterisk>\\\*)',
-            r'(?P<bold_text>\*(?:[^*\\]|\\.)+\*)',
-            r'(?P<leading_pipe>^\|)',
-            r'(?P<escaped_leading_pipe>^\\\|)',
-            r'(?P<trailing_spaces>\s+$)',
-        ]
-        pattern = re.compile('|'.join(tokens))
-
-        # token-processing rules
-        rules = dict(
-            escaped_backslash=lambda text: '\\',
-            escaped_asterisk=lambda text: '*',
-            leading_pipe=lambda text: '\n',
-            escaped_leading_pipe=lambda text: '|',
-            bold_text=lambda text: DocstringMarkup.process_bold_body(text[1:-1]),
-            trailing_spaces=lambda text: ''
-        )
-
-    class BoldBody:
-        """Lexical rules to process escaped symbols inside bold text."""
-
-        tokens = [
-            r'(?P<escaped_backslash>\\\\)',
-            r'(?P<escaped_asterisk>\\\*)',
-        ]
-        pattern = re.compile('|'.join(tokens))
-
-        # token-processing rules
-        rules = dict(
-            escaped_backslash=lambda text: '\\',
-            escaped_asterisk=lambda text: '*',
-        )
+    bold_format = TokenProcessor(
+        escaped_backslash=(r'\\\\', const('\\')),
+        escaped_asterisk=(r'\\\*', const('*')),
+    )
 
     @staticmethod
     def process_lines(doc_lines):
@@ -76,43 +58,14 @@ class DocstringMarkup:
                 paragraphs.append(' '.join(paragraph))
                 paragraph = []
             else:
-                paragraph.append(DocstringMarkup.process_line(line))
+                paragraph.append(Markup.inline_format.process(line))
         if len(paragraph) > 0:
             paragraphs.append(' '.join(paragraph))
         return '\n\n'.join(paragraphs)
 
     @staticmethod
     def process(docstring):
-        return DocstringMarkup.process_lines(docstring.split('\n'))
-
-    @staticmethod
-    def process_line(line):
-        inline = DocstringMarkup.Inline
-        return DocstringMarkup.process_tokens(line, inline.pattern, inline.rules)
-
-    @staticmethod
-    def process_bold_body(body):
-        unescaped_body = DocstringMarkup.process_tokens(text=body,
-                                                        pattern=DocstringMarkup.BoldBody.pattern,
-                                                        rules=DocstringMarkup.BoldBody.rules)
-        return Ansi.bold(unescaped_body)
-
-    @staticmethod
-    def process_tokens(text, pattern, rules):
-        last_token_end = 0
-        text_chunks = []
-        for token in pattern.finditer(text):
-            if token.start() > last_token_end:
-                text_chunks.append(text[last_token_end:token.start()])
-            last_token_end = token.end()
-            for token_type, matched_text in token.groupdict().items():
-                if matched_text is not None:
-                    rule = rules[token_type]
-                    chunk = rule(matched_text)
-                    text_chunks.append(chunk)
-        if last_token_end < len(text):
-            text_chunks.append(text[last_token_end:])
-        return ''.join(text_chunks)
+        return Markup.process_lines(docstring.split('\n'))
 
 
 class Paragraph:
@@ -146,7 +99,7 @@ class Paragraph:
 class TechWriter:
     """Documentation composer for handlers and commands."""
 
-    def __init__(self, markup=DocstringMarkup, indent=' ' * 4):
+    def __init__(self, markup=Markup, indent=' ' * 4):
         self._terminal = Terminal.detect()
         self._markup = markup
         self._indent_unit = indent

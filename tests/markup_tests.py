@@ -1,11 +1,11 @@
 import unittest
 
-from comandante.inner.markup import Ansi, DocstringMarkup
+from comandante.inner.markup import Ansi, Markup
 
 
 class DocstringMarkupTests(unittest.TestCase):
     def assert_process(self, text, expected_output, message=None):
-        self.assertEqual(DocstringMarkup.process(text), expected_output, message)
+        self.assertEqual(Markup.process(text), expected_output, message)
 
     def test_normal_text(self):
         self.assert_process("a normal text",
