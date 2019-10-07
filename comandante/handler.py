@@ -120,7 +120,7 @@ class Handler:
             raise RuntimeError("Duplicate command name: {name}".format(name=name))
         self._commands[name] = handler
 
-    def option(self, name, short, type, default):
+    def option(self, name, short, type, default, descr=""):
         """Declare a new option.
 
         Option defined by this method will be available for
@@ -130,10 +130,11 @@ class Handler:
         :param short: option short name
         :param type: option type
         :param default: option default value
+        :param descr: option description
         """
         if name in self.declared_options:
             raise ValueError("Duplicate option name: '{name}'".format(name=name))
-        option = Option(name=name, short=short, type=type, default=default)
+        option = Option(name=name, short=short, type=type, default=default, descr=descr)
         self._declared_options[option.name] = option
 
     @property
