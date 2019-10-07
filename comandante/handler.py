@@ -8,12 +8,11 @@ a command-line interface handler.
 """
 
 import comandante.decorators as decor
-
 from comandante.errors import CliSyntaxException
 from comandante.inner.bind import BoundCommand, HandlerProxy
 from comandante.inner.helpers import describe, getname
-from comandante.inner.help_writer import HelpWriter
 from comandante.inner.model import Option
+from comandante.inner.output.help_writer import HelpWriter
 
 
 class Handler:

@@ -16,7 +16,7 @@ import itertools
 import re
 
 from comandante.inner.helpers import describe
-from comandante.inner.help_writer import HelpWriter
+from comandante.inner.output.help_writer import HelpWriter
 from comandante.inner.parser import Parser
 
 

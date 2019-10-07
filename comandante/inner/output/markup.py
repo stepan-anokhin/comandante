@@ -1,6 +1,6 @@
 import re
 
-from comandante.inner.token_processor import TokenProcessor
+from comandante.inner.output.token_processor import TokenProcessor
 
 
 class Ansi:

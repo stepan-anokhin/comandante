@@ -1,6 +1,6 @@
 import unittest
 
-from comandante.inner.markup import Ansi, Markup
+from comandante.inner.output.markup import Ansi, Markup
 
 
 class DocstringMarkupTests(unittest.TestCase):

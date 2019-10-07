@@ -1,8 +1,8 @@
 import textwrap
 
 from comandante.inner.helpers import isblank, getname
-from comandante.inner.markup import Markup, Ansi
-from comandante.inner.terminal import Terminal
+from comandante.inner.output.markup import Markup, Ansi
+from comandante.inner.output.terminal import Terminal
 
 
 class Paragraph:
