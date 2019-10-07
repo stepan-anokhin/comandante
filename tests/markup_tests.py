@@ -61,3 +61,7 @@ class DocstringMarkupTests(unittest.TestCase):
     def test_trailing_spaces(self):
         self.assert_process("with trailing spaces    ",
                             "with trailing spaces")
+
+    def test_paragraph_breaking(self):
+        self.assert_process("first  \nparagraph\n\n  \n \nsecond\nparagraph",
+                            "first paragraph\n\nsecond paragraph")
