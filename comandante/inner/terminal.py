@@ -27,7 +27,7 @@ class Terminal:
     @staticmethod
     def _terminal_geometry_linux(default_width):
         try:
-            output = subprocess.check_output(['stty', 'size'])
+            output = subprocess.check_output(['stty', 'size'], stderr=False)
             height, width = tuple(map(int, output.split()))
             return width, height
         except (OSError, subprocess.CalledProcessError):
