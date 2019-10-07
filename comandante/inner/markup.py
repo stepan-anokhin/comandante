@@ -1,8 +1,8 @@
-import os.path
 import re
-from itertools import filterfalse, takewhile, islice, chain
+import textwrap
 
 from comandante.inner.helpers import isblank, getname
+from comandante.inner.terminal import Terminal
 
 
 class Ansi:
@@ -128,10 +128,39 @@ class DocstringMarkup:
         return ''.join(result)
 
 
+class Paragraph:
+    @staticmethod
+    def list(text, delimiter='\n\n'):
+        return list(map(Paragraph, text.split(delimiter)))
+
+    def __init__(self, text, initial_indent='', subsequent_indent=''):
+        self._text = text
+        self._initial_indent = initial_indent
+        self._subsequent_indent = subsequent_indent
+
+    def indent(self, indent=' ' * 4):
+        self._initial_indent = indent + self._initial_indent
+        self._subsequent_indent = indent + self._subsequent_indent
+        return self
+
+    @property
+    def text(self):
+        return self._text
+
+    @property
+    def initial_indent(self):
+        return self._initial_indent
+
+    @property
+    def subsequent_indent(self):
+        return self._subsequent_indent
+
+
 class TechWriter:
     """Documentation composer for handlers and commands."""
 
     def __init__(self, markup=DocstringMarkup, indent=' ' * 4):
+        self._terminal = Terminal.detect(max_width=30)
         self._markup = markup
         self._indent_unit = indent
 
@@ -147,23 +176,18 @@ class TechWriter:
     @staticmethod
     def unindent(text):
         """Remove common indent."""
-        lines = text.split('\n')
-        indent_width = len(TechWriter.indentation(islice(lines, 1, None)))
-        unindented_lines = map(lambda line: line[indent_width:], islice(lines, 1, None))
-        return '\n'.join(chain(islice(lines, 0, 1), unindented_lines))
-
-    @staticmethod
-    def indentation(lines):
-        """Get common blank prefix of all non-blank lines."""
-        non_blank_lines = list(filterfalse(isblank, lines))
-        common_prefix = os.path.commonprefix(non_blank_lines)
-        return ''.join(takewhile(isblank, common_prefix))
+        if text.startswith('\n') or '\n' not in text:
+            return textwrap.dedent(text)
+        first, rest = text.split('\n', maxsplit=1)
+        rest = textwrap.dedent(rest)
+        return '\n'.join((first, rest))
 
     def document_handler(self, handler):
         sections = list()
         sections.append(self.name_section(handler))
         sections.append(self.commands_section(handler))
         sections.append(self.description_section(handler))
+        sections.append(self.options_section(handler))
         return self.compose_sections(sections)
 
     def document_command(self, command):
@@ -194,13 +218,12 @@ class TechWriter:
             briefs.append(command.brief)
         name_column_width = max(map(len, names))
 
-        lines = list()
-        pattern = "{name:<{width}}{indent}#{indent}{brief}"
+        paragraphs = list()
         for name, brief in zip(names, briefs):
-            entry = pattern.format(name=name, brief=brief, width=name_column_width, indent=self._indent_unit)
-            lines.append(entry)
-        text = '\n'.join(lines)
-        return self.section(heading="commands", body=text)
+            name_entry = "{name:<{width}}".format(name=name, width=name_column_width)
+            paragraph = self.comment(what=name_entry, comment=brief)
+            paragraphs.append(paragraph)
+        return self.section_paragraphs(heading="commands", paragraphs=paragraphs, delimiter='\n')
 
     def description_section(self, element):
         """Get formatted description for cli element."""
@@ -208,11 +231,40 @@ class TechWriter:
             return
 
         text = self.markup(element.descr)
-        return self.section(heading="description", body=text)
+        return self.section_paragraphs(heading="description", paragraphs=Paragraph.list(text))
+
+    def section_paragraphs(self, heading, paragraphs, delimiter='\n\n'):
+        heading = Ansi.bold(heading.upper())
+
+        body = list()
+        for paragraph in paragraphs:
+            paragraph.indent(self._indent_unit)
+            body.append(self.wrap(paragraph))
+        body = delimiter.join(body)
+        return "{heading}\n{body}".format(heading=heading, body=body)
+
+    def wrap(self, paragraph):
+        wrapper = textwrap.TextWrapper(
+            initial_indent=paragraph.initial_indent,
+            subsequent_indent=paragraph.subsequent_indent,
+            width=self._terminal.width)
+        return '\n'.join(wrapper.wrap(paragraph.text))
 
     def section(self, heading, body):
         heading = Ansi.bold(heading.upper())
-        body = self.indent(body)
+        # body = self.indent(body)
+
+        result = list()
+        wrapper = textwrap.TextWrapper(initial_indent=self._indent_unit,
+                                       subsequent_indent=self._indent_unit,
+                                       width=self._terminal.width)
+        for line in body.split('\n'):
+            if isblank(line):
+                result.append(line)
+                continue
+            result.extend(wrapper.wrap(line))
+        body = '\n'.join(result)
+
         return "{heading}\n{body}".format(heading=heading, body=body)
 
     @staticmethod
@@ -259,6 +311,13 @@ class TechWriter:
             description = self.markup(self.unindent(option.descr))
             summary.append(self.indent(description))
         return '\n'.join(summary)
+
+    def comment(self, what, comment):
+        if not comment:
+            return Paragraph(what)
+        initial = "{text}{indent}#{indent}".format(text=what, indent=self._indent_unit)
+        subsequent = " " * len(initial)
+        return Paragraph(text=comment, initial_indent=initial, subsequent_indent=subsequent)
 
     @staticmethod
     def option_pattern(option):
