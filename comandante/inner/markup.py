@@ -147,7 +147,7 @@ class TechWriter:
     """Documentation composer for handlers and commands."""
 
     def __init__(self, markup=DocstringMarkup, indent=' ' * 4):
-        self._terminal = Terminal.detect(max_width=30)
+        self._terminal = Terminal.detect()
         self._markup = markup
         self._indent_unit = indent
 
