@@ -26,10 +26,7 @@ class DocstringMarkup:
         tokens = [
             r'(?P<escaped_backslash>\\\\)',
             r'(?P<escaped_asterisk>\\\*)',
-            r'(?P<non_escaping_backslash>\\[^*\\])',
             r'(?P<bold_text>\*(?:[^*\\]|\\.)+\*)',
-            r'(?P<unmatched_asterisk>\*(?:[^*\\]|\\.)+$)',
-            r'(?P<normal_text>[^*\\]+)',
         ]
         pattern = re.compile('|'.join(tokens))
 
@@ -37,10 +34,7 @@ class DocstringMarkup:
         rules = dict(
             escaped_backslash=lambda text: '\\',
             escaped_asterisk=lambda text: '*',
-            non_escaping_backslash=lambda text: text,
             bold_text=lambda text: DocstringMarkup.process_bold_body(text[1:-1]),
-            unmatched_asterisk=lambda text: '*' + DocstringMarkup.process_inline_formatting(text[1:]),
-            normal_text=lambda text: text,
         )
 
     class BoldBody:
@@ -49,8 +43,6 @@ class DocstringMarkup:
         tokens = [
             r'(?P<escaped_backslash>\\\\)',
             r'(?P<escaped_asterisk>\\\*)',
-            r'(?P<non_escaping_backslash>\\[^*\\])',
-            r'(?P<normal_text>[^*\\]+)',
         ]
         pattern = re.compile('|'.join(tokens))
 
@@ -58,8 +50,6 @@ class DocstringMarkup:
         rules = dict(
             escaped_backslash=lambda text: '\\',
             escaped_asterisk=lambda text: '*',
-            non_escaping_backslash=lambda text: text,
-            normal_text=lambda text: text,
         )
 
     @staticmethod
@@ -118,14 +108,20 @@ class DocstringMarkup:
 
     @staticmethod
     def process_tokens(text, pattern, rules):
-        result = []
+        last_token_end = 0
+        text_chunks = []
         for token in pattern.finditer(text):
+            if token.start() > last_token_end:
+                text_chunks.append(text[last_token_end:token.start()])
+            last_token_end = token.end()
             for token_type, matched_text in token.groupdict().items():
                 if matched_text is not None:
                     rule = rules[token_type]
                     chunk = rule(matched_text)
-                    result.append(chunk)
-        return ''.join(result)
+                    text_chunks.append(chunk)
+        if last_token_end < len(text):
+            text_chunks.append(text[last_token_end:])
+        return ''.join(text_chunks)
 
 
 class Paragraph:
