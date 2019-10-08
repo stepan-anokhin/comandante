@@ -1,6 +1,7 @@
 import textwrap
+from itertools import chain
 
-from comandante.inner.helpers import isblank, getname
+from comandante.inner.helpers import getname
 from comandante.inner.output.markup import Markup, Ansi
 from comandante.inner.output.terminal import Terminal
 
@@ -10,10 +11,10 @@ class Paragraph:
     def list(text, delimiter='\n\n'):
         return list(map(Paragraph, text.split(delimiter)))
 
-    def __init__(self, text, initial_indent='', subsequent_indent=''):
+    def __init__(self, text, initial_indent='', subsequent_indent=None):
         self._text = text
         self._initial_indent = initial_indent
-        self._subsequent_indent = subsequent_indent
+        self._subsequent_indent = subsequent_indent if subsequent_indent is not None else initial_indent
 
     def indent(self, indent=' ' * 4):
         self._initial_indent = indent + self._initial_indent
@@ -41,24 +42,6 @@ class HelpWriter:
         self._markup = markup
         self._indent_unit = indent
 
-    def markup(self, text):
-        return self._markup.process(text)
-
-    def indent(self, text, amount=1):
-        """Indent entire text with the given amount of indentation units."""
-        lines = text.split('\n')
-        indent = self._indent_unit * amount
-        return '\n'.join(map(indent.__add__, lines))
-
-    @staticmethod
-    def dedent(text):
-        """Remove common indent."""
-        if text.startswith('\n') or '\n' not in text:
-            return textwrap.dedent(text)
-        first, rest = text.split('\n', maxsplit=1)
-        rest = textwrap.dedent(rest)
-        return '\n'.join((first, rest))
-
     def document_handler(self, handler):
         sections = list()
         sections.append(self.name_section(handler))
@@ -75,13 +58,44 @@ class HelpWriter:
         sections.append(self.options_section(command))
         return self.compose_sections(sections)
 
+    def paragraphs(self, text):
+        return map(Paragraph, self._markup.paragraphs(text))
+
+    def indent(self, text, amount=1):
+        """Indent entire text with the given amount of indentation units."""
+        lines = text.split('\n')
+        indent = self._indent_unit * amount
+        return '\n'.join(map(indent.__add__, lines))
+
+    @staticmethod
+    def dedent(text):
+        """Remove common indent."""
+        if text.startswith('\n') or '\n' not in text:
+            return textwrap.dedent(text)
+        first, rest = text.split('\n', maxsplit=1)
+        rest = textwrap.dedent(rest)
+        return '\n'.join((first, rest))
+
     def name_section(self, element):
         """Create name section for the cli element."""
         if not element.brief:
             return None
 
         text = "{name} - {brief}".format(name=element.name, brief=element.brief)
-        return self.section(heading="name", body=text)
+        return self.section(heading="name", paragraphs=[Paragraph(text)])
+
+    def synopsis_section(self, command):
+        """Get formatted usage."""
+        synopsis = list()
+        synopsis.append(command.name)
+        if command.declared_options:
+            synopsis.append("[OPTIONS]")
+        for argument in command.signature.arguments:
+            pattern = self.argument_pattern(argument)
+            synopsis.append(pattern.format(name=argument.name))
+        synopsis = ' '.join(synopsis)
+
+        return self.section(heading="synopsis", paragraphs=[Paragraph(synopsis)])
 
     def commands_section(self, handler):
         """Get summary for all defined commands."""
@@ -99,18 +113,28 @@ class HelpWriter:
         for name, brief in zip(names, briefs):
             name_entry = "{name:<{width}}".format(name=name, width=name_column_width)
             paragraph = self.comment(what=name_entry, comment=brief)
+            paragraph.margin_bottom = 0
             paragraphs.append(paragraph)
-        return self.section_paragraphs(heading="commands", paragraphs=paragraphs, delimiter='\n')
+        return self.section(heading="commands", paragraphs=paragraphs, delimiter='\n')
 
     def description_section(self, element):
         """Get formatted description for cli element."""
         if not element.descr:
             return
 
-        text = self.markup(element.descr)
-        return self.section_paragraphs(heading="description", paragraphs=Paragraph.list(text))
+        paragraphs = self.paragraphs(element.descr)
+        return self.section(heading="description", paragraphs=paragraphs)
 
-    def section_paragraphs(self, heading, paragraphs, delimiter='\n\n'):
+    def options_section(self, element):
+        """Get cli element options summary."""
+        if not element.declared_options:
+            return
+
+        declared_options = element.declared_options.values()
+        summarized_options = map(self.summarize_option, declared_options)
+        return self.section(heading="options", paragraphs=chain(*summarized_options))
+
+    def section(self, heading, paragraphs, delimiter='\n\n'):
         heading = Ansi.bold(heading.upper())
 
         body = list()
@@ -121,46 +145,28 @@ class HelpWriter:
         return "{heading}\n{body}".format(heading=heading, body=body)
 
     def wrap(self, paragraph):
-        wrapper = textwrap.TextWrapper(
+        # first line wrapper
+        first = textwrap.TextWrapper(
             initial_indent=paragraph.initial_indent,
             subsequent_indent=paragraph.subsequent_indent,
             width=self._terminal.width)
-        return '\n'.join(wrapper.wrap(paragraph.text))
 
-    def section(self, heading, body):
-        heading = Ansi.bold(heading.upper())
-        # body = self.indent(body)
+        # subsequent lines wrapper
+        subsequent = textwrap.TextWrapper(
+            initial_indent=paragraph.subsequent_indent,
+            subsequent_indent=paragraph.subsequent_indent,
+            width=self._terminal.width)
 
-        result = list()
-        wrapper = textwrap.TextWrapper(initial_indent=self._indent_unit,
-                                       subsequent_indent=self._indent_unit,
-                                       width=self._terminal.width)
-        for line in body.split('\n'):
-            if isblank(line):
-                result.append(line)
-                continue
-            result.extend(wrapper.wrap(line))
-        body = '\n'.join(result)
-
-        return "{heading}\n{body}".format(heading=heading, body=body)
+        paragraph_lines = paragraph.text.split('\n')
+        wrapped_lines = first.wrap(paragraph_lines[0])
+        for line in paragraph_lines[1:]:
+            wrapped_lines.extend(subsequent.wrap(line))
+        return '\n'.join(wrapped_lines)
 
     @staticmethod
     def compose_sections(sections):
         sections = filter(bool, sections)
         return '\n\n'.join(sections)
-
-    def synopsis_section(self, command):
-        """Get formatted usage."""
-        synopsis = list()
-        synopsis.append(command.name)
-        if command.declared_options:
-            synopsis.append("[OPTIONS]")
-        for argument in command.signature.arguments:
-            pattern = self.argument_pattern(argument)
-            synopsis.append(pattern.format(name=argument.name))
-        synopsis = ' '.join(synopsis)
-
-        return self.section(heading="synopsis", body=synopsis)
 
     @staticmethod
     def argument_pattern(argument):
@@ -169,25 +175,22 @@ class HelpWriter:
             return "<{name}>"
         return "[{name}]"
 
-    def options_section(self, element):
-        """Get cli element options summary."""
-        if not element.declared_options:
-            return
-
-        summarized_options = map(self.summarize_option, element.declared_options.values())
-        summarized_options = '\n\n'.join(summarized_options)
-        return self.section(heading="options", body=summarized_options)
-
     def summarize_option(self, option):
         """Get option summary."""
+        paragraphs = []
+        descr_paragraphs = self.paragraphs(self.dedent(option.descr))
+
         pattern = self.option_pattern(option)
         synopsis = pattern.format(long=option.name, short=option.short, type=getname(option.type))
-        summary = [synopsis]
+        first_paragraph_text = "{synopsis}\n{text}".format(synopsis=synopsis, text=next(descr_paragraphs).text)
+        first_paragraph = Paragraph(first_paragraph_text, initial_indent='', subsequent_indent=self._indent_unit)
 
-        if option.descr:
-            description = self.markup(self.dedent(option.descr))
-            summary.append(self.indent(description))
-        return '\n'.join(summary)
+        paragraphs.append(first_paragraph)
+        for paragraph in descr_paragraphs:
+            paragraph.indent(self._indent_unit)
+            paragraphs.append(paragraph)
+
+        return paragraphs
 
     def comment(self, what, comment):
         if not comment:
