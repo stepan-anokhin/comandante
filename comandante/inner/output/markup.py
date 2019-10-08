@@ -21,7 +21,7 @@ def const(value):
 class Markup:
     """Docstring markup processor."""
 
-    paragraph_break = re.compile(r'\n\s*\n', re.MULTILINE)
+    paragraph_break = re.compile(r'\n\s*?\n\s*', re.MULTILINE)
 
     paragraph_format = TokenProcessor(
         escaped_backslash=(r'\\\\', const('\\')),

@@ -78,3 +78,42 @@ class DescribeTests(unittest.TestCase):
         brief, descr = describe(multiline)
         self.assertEqual(brief, "Brief description")
         self.assertEqual(descr, "First\n\nSecond")
+
+    def test_multiline_brief(self):
+        def multiline_brief():
+            """Multiline
+            brief description
+
+            Multiline
+
+            long
+            description
+            """
+
+        brief, descr = describe(multiline_brief)
+        self.assertEqual(brief, "Multiline\nbrief description")
+        self.assertEqual(descr, "Multiline\n\nlong\ndescription")
+
+    def test_leading_spaces(self):
+        def leading_spaces():
+            """      Brief description
+
+            Long description
+            """
+
+        brief, descr = describe(leading_spaces)
+        self.assertEqual(brief, "Brief description")
+        self.assertEqual(descr, "Long description")
+
+    def test_leading_blank_lines(self):
+        def leading_blank_lines():
+            """
+
+            Brief description
+
+            Long description
+            """
+
+        brief, descr = describe(leading_blank_lines)
+        self.assertEqual(brief, "Brief description")
+        self.assertEqual(descr, "Long description")
