@@ -11,6 +11,7 @@ to the command line description in terms of domain model.
 import itertools
 
 from comandante.errors import CliSyntaxException
+from comandante.inner.helpers import getname
 
 
 class Parser:
@@ -146,4 +147,14 @@ class Parser:
         """Get a function parsing a raw argument value from the command-line."""
         if argument.type is bool:
             return lambda value: value == argument.name
-        return argument.type
+
+        def parser(value):
+            """Parse argument value."""
+            try:
+                return argument.type(value)
+            except ValueError as e:
+                error_pattern = "Invalid value for argument '{name}' of type '{type}': '{value}'"
+                error_message = error_pattern.format(name=argument.name, type=getname(argument.type), value=value)
+                raise CliSyntaxException(error_message)
+
+        return parser
