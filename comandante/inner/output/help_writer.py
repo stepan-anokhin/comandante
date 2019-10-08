@@ -51,7 +51,7 @@ class HelpWriter:
         return '\n'.join(map(indent.__add__, lines))
 
     @staticmethod
-    def unindent(text):
+    def dedent(text):
         """Remove common indent."""
         if text.startswith('\n') or '\n' not in text:
             return textwrap.dedent(text)
@@ -185,7 +185,7 @@ class HelpWriter:
         summary = [synopsis]
 
         if option.descr:
-            description = self.markup(self.unindent(option.descr))
+            description = self.markup(self.dedent(option.descr))
             summary.append(self.indent(description))
         return '\n'.join(summary)
 
