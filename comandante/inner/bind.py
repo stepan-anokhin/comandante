@@ -6,6 +6,7 @@ Description:
 This module defines logic that binds different parts of
 comandante API together to make it more convenient.
 """
+from comandante.inner.proxy import Proxy
 
 
 class BoundCommand:
@@ -76,7 +77,7 @@ class CommandMethodDescriptor:
         return getattr(self._command, item)
 
 
-class HandlerProxy:
+class WithOptionsHandlerProxy(Proxy):
     """Wrapper setting cli-handler option values.
 
     HandlerProxy is used to temporary set handler option values.
@@ -88,12 +89,12 @@ class HandlerProxy:
         :param handler: handler to wrap around.
         :param options: dict containing option values to be set.
         """
-        self._handler = handler
-        self._options = options
+        super().__init__(handler)
+        super().__setattr__('_options', options)
 
     def __getattr__(self, item):
         """Delegate attribute access to the underlying handler."""
-        value = getattr(self._handler, item)
+        value = getattr(self._target, item)
         if type(value) is BoundCommand:
             return BoundCommand(value.command, self)
         return value
