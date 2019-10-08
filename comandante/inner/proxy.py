@@ -39,6 +39,9 @@ class Proxy:
     def __str__(self):
         return str(self._target)
 
+    def __repr__(self):
+        return repr(self._target)
+
     def __call__(self, *args, **kwargs):
         return self._target(*args, **kwargs)
 

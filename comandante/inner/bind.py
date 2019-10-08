@@ -6,6 +6,7 @@ Description:
 This module defines logic that binds different parts of
 comandante API together to make it more convenient.
 """
+from comandante.inner.helpers import getname
 from comandante.inner.proxy import Proxy
 
 
@@ -90,7 +91,7 @@ class WithOptionsHandlerProxy(Proxy):
         :param options: dict containing option values to be set.
         """
         super().__init__(handler)
-        super().__setattr__('_options', options)
+        super().__setattr__('_options', ImmutableAttrDictProxy(options.copy()))
 
     def __getattr__(self, item):
         """Delegate attribute access to the underlying handler."""
@@ -103,3 +104,21 @@ class WithOptionsHandlerProxy(Proxy):
     def options(self):
         """Get options."""
         return self._options
+
+
+class ImmutableAttrDictProxy(Proxy):
+    def __getattr__(self, item):
+        """Delegate attribute access to items contained by the underlying dict."""
+        if hasattr(self._target, item):
+            return getattr(self._target, item)
+        if item in self._target:
+            return self._target[item]
+        error_pattern = "'{type}' object has no attribute '{name}'"
+        error_message = error_pattern.format(type=getname(type(self._target)), name=item)
+        raise AttributeError(error_message)
+
+    def __setitem__(self, key, value):
+        raise TypeError('Immutable dict does not support item assignment')
+
+    def __delitem__(self, key):
+        raise TypeError("Immutable dict doesn't support item deletion")
