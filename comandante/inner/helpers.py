@@ -8,7 +8,8 @@ for internal use only.
 """
 
 import inspect
-import itertools
+
+from comandante.inner.output.markup import Markup
 
 
 def isblank(line):
@@ -24,10 +25,11 @@ def describe(o):
     """
     if inspect.getdoc(o) is None:
         return '', ''
-    lines = inspect.getdoc(o).split('\n')
-    brief = lines[0]
-    descr = itertools.dropwhile(isblank, lines[1:])
-    return brief, '\n'.join(descr)
+    text = inspect.getdoc(o)
+    parts = Markup.paragraph_break.split(text, maxsplit=1)
+    brief = parts[0]
+    descr = parts[1] if len(parts) == 2 else ''
+    return brief, descr
 
 
 def getname(o):
