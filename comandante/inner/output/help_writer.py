@@ -46,7 +46,7 @@ class HelpWriter:
         full_name = full_name or [handler.name]
         sections = list()
         sections.append(self.name_section(handler, full_name))
-        sections.append(self.commands_section(handler))
+        sections.append(self.commands_section(handler, full_name))
         sections.append(self.description_section(handler))
         sections.append(self.options_section(handler))
         return self.compose_sections(sections)
@@ -103,13 +103,15 @@ class HelpWriter:
 
         return self.section(heading="synopsis", paragraphs=[Paragraph(synopsis)])
 
-    def commands_section(self, handler):
+    def commands_section(self, handler, full_name):
         """Get summary for all defined commands."""
         if not handler.declared_commands:
             return
 
         names, briefs = list(), list()
         for name in sorted(handler.declared_commands.keys()):
+            if self._is_nested_help(name, full_name):
+                continue
             command = handler.declared_commands[name]
             names.append(command.name)
             briefs.append(command.brief)
@@ -122,6 +124,10 @@ class HelpWriter:
             paragraph.margin_bottom = 0
             paragraphs.append(paragraph)
         return self.section(heading="commands", paragraphs=paragraphs, delimiter='\n')
+
+    @staticmethod
+    def _is_nested_help(command, full_name):
+        return len(full_name) > 0 and command == 'help'
 
     def description_section(self, element):
         """Get formatted description for cli element."""
