@@ -93,6 +93,9 @@ class HelpWriter:
         for argument in command.signature.arguments:
             pattern = self.argument_pattern(argument)
             synopsis.append(pattern.format(name=argument.name))
+        if command.signature.vararg is not None:
+            pattern = "[{name} ... ]"
+            synopsis.append(pattern.format(name=command.signature.vararg.name))
         synopsis = ' '.join(synopsis)
 
         return self.section(heading="synopsis", paragraphs=[Paragraph(synopsis)])
@@ -171,7 +174,7 @@ class HelpWriter:
     @staticmethod
     def argument_pattern(argument):
         """Get argument pattern."""
-        if argument.is_required:
+        if argument.is_required():
             return "<{name}>"
         return "[{name}]"
 
