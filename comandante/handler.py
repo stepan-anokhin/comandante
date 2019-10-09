@@ -80,12 +80,18 @@ class Handler:
             print(self.full_doc())
             return
 
-        if command not in self._commands:
-            print("Unknown command: {name}".format(name=command))
-            print(self.full_doc())
-            return
+        element = self
+        context = [self.name]
+        full_name = [command] + list(subcommands)
+        for name in full_name:
+            if name not in element.declared_commands:
+                print("Unknown command: {name}".format(name=' '.join(full_name)))
+                print(element.full_doc(full_name=context))
+                return
+            context.append(name)
+            element = element.declared_commands[name]
 
-        print(self._commands[command].full_doc())
+        print(element.full_doc(full_name=context))
 
     @property
     def name(self):
@@ -101,10 +107,10 @@ class Handler:
         """Get long handler description."""
         return self._descr
 
-    def full_doc(self):
+    def full_doc(self, full_name=None):
         """Get full documentation"""
         help_writer = HelpWriter()
-        return help_writer.document_handler(self)
+        return help_writer.document_handler(self, full_name)
 
     def subcommand(self, name, handler):
         """Declare subcommand."""

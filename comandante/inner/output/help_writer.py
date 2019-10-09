@@ -42,18 +42,20 @@ class HelpWriter:
         self._markup = markup
         self._indent_unit = indent
 
-    def document_handler(self, handler):
+    def document_handler(self, handler, full_name=None):
+        full_name = full_name or [handler.name]
         sections = list()
-        sections.append(self.name_section(handler))
+        sections.append(self.name_section(handler, full_name))
         sections.append(self.commands_section(handler))
         sections.append(self.description_section(handler))
         sections.append(self.options_section(handler))
         return self.compose_sections(sections)
 
-    def document_command(self, command):
+    def document_command(self, command, full_name=None):
+        full_name = full_name or [command.name]
         sections = list()
-        sections.append(self.name_section(command))
-        sections.append(self.synopsis_section(command))
+        sections.append(self.name_section(command, full_name))
+        sections.append(self.synopsis_section(command, full_name))
         sections.append(self.description_section(command))
         sections.append(self.options_section(command))
         return self.compose_sections(sections)
@@ -76,18 +78,19 @@ class HelpWriter:
         rest = textwrap.dedent(rest)
         return '\n'.join((first, rest))
 
-    def name_section(self, element):
+    def name_section(self, element, full_name):
         """Create name section for the cli element."""
         if not element.brief:
             return None
 
-        text = "{name} - {brief}".format(name=element.name, brief=element.brief)
+        full_name = ' '.join(full_name)
+        text = "{name} - {brief}".format(name=full_name, brief=element.brief)
         return self.section(heading="name", paragraphs=[Paragraph(text)])
 
-    def synopsis_section(self, command):
+    def synopsis_section(self, command, full_name):
         """Get formatted usage."""
         synopsis = list()
-        synopsis.append(command.name)
+        synopsis.append(' '.join(full_name))
         if command.declared_options:
             synopsis.append("[OPTIONS]")
         for argument in command.signature.arguments:

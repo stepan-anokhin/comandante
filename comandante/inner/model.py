@@ -410,7 +410,7 @@ class Command:
             return self.func(*arguments, **options)
         return self.func(*arguments)
 
-    def full_doc(self):
+    def full_doc(self, full_name=None):
         """Get command full formatted documentation."""
         help_writer = HelpWriter()
-        return help_writer.document_command(self)
+        return help_writer.document_command(self, full_name)
