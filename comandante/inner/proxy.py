@@ -6,10 +6,22 @@ Description:
 This module provides a generic python
 object proxy class.
 """
+from comandante.inner.helpers import getname
 
 
 class Proxy:
     """Generic python object proxy."""
+
+    def _unsupport(self, *names):
+        for name in names:
+            pattern = "'{type}' does not support method '{name}'"
+            message = pattern.format(type=getname(type(self)), name=name)
+
+            def stub(*_args, **_kwargs):
+                raise TypeError(message)
+
+            stub.__name__ = name
+            super().__setattr__(name, stub)
 
     def __init__(self, target):
         super().__setattr__('_target', target)

@@ -104,20 +104,9 @@ class HandlerWithOptions(Proxy):
 
 
 class ImmutableDict(Proxy):
-    def clear(self):
-        raise TypeError("ImmutableDict doesn't support 'clear' operation")
-
-    def pop(self, k, default):
-        raise TypeError("ImmutableDict doesn't support 'pop' operation")
-
-    def popitem(self):
-        raise TypeError("ImmutableDict doesn't support 'popitem' operation")
-
-    def update(self, *args, **kwargs):
-        raise TypeError("ImmutableDict doesn't support 'pop' operation")
-
-    def setdefault(self, k, default):
-        raise TypeError("ImmutableDict doesn't support 'setdefault' operation")
+    def __init__(self, target):
+        super().__init__(target)
+        self._unsupport('clear', 'pop', 'popitem', 'update', 'setdefault')
 
     def __setitem__(self, key, value):
         raise TypeError('ImmutableDict does not support item assignment')
