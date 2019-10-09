@@ -9,7 +9,7 @@ a command-line interface handler.
 
 import comandante.decorators as decor
 from comandante.errors import CliSyntaxException
-from comandante.inner.bind import BoundCommand, WithOptionsHandlerProxy
+from comandante.inner.bind import BoundCommand, HandlerWithOptions
 from comandante.inner.helpers import describe, getname
 from comandante.inner.model import Option
 from comandante.inner.output.help_writer import HelpWriter
@@ -147,7 +147,7 @@ class Handler:
 
         :param options: option values as kv-args
         """
-        return WithOptionsHandlerProxy(self, options)
+        return HandlerWithOptions(self, options)
 
     @property
     def options(self):

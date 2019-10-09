@@ -78,11 +78,8 @@ class CommandMethodDescriptor:
         return getattr(self._command, item)
 
 
-class WithOptionsHandlerProxy(Proxy):
-    """Wrapper setting cli-handler option values.
-
-    HandlerProxy is used to temporary set handler option values.
-    """
+class HandlerWithOptions(Proxy):
+    """Handler proxy with specified option values."""
 
     def __init__(self, handler, options):
         """Initialize instance.
@@ -91,7 +88,7 @@ class WithOptionsHandlerProxy(Proxy):
         :param options: dict containing option values to be set.
         """
         super().__init__(handler)
-        super().__setattr__('_options', ImmutableAttrDictProxy(options.copy()))
+        super().__setattr__('_options', AttributeDict(options.copy()))
 
     def __getattr__(self, item):
         """Delegate attribute access to the underlying handler."""
@@ -103,10 +100,35 @@ class WithOptionsHandlerProxy(Proxy):
     @property
     def options(self):
         """Get options."""
-        return self._options
+        return self._option
 
 
-class ImmutableAttrDictProxy(Proxy):
+class ImmutableDict(Proxy):
+    def clear(self):
+        raise TypeError("ImmutableDict doesn't support 'clear' operation")
+
+    def pop(self, k, default):
+        raise TypeError("ImmutableDict doesn't support 'pop' operation")
+
+    def popitem(self):
+        raise TypeError("ImmutableDict doesn't support 'popitem' operation")
+
+    def update(self, *args, **kwargs):
+        raise TypeError("ImmutableDict doesn't support 'pop' operation")
+
+    def setdefault(self, k, default):
+        raise TypeError("ImmutableDict doesn't support 'setdefault' operation")
+
+    def __setitem__(self, key, value):
+        raise TypeError('ImmutableDict does not support item assignment')
+
+    def __delitem__(self, key):
+        raise TypeError("ImmutableDict doesn't support item deletion")
+
+
+class AttributeDict(ImmutableDict):
+    """Immutable dict proxy with attribute-like access to its items."""
+
     def __getattr__(self, item):
         """Delegate attribute access to items contained by the underlying dict."""
         if hasattr(self._target, item):
@@ -116,9 +138,3 @@ class ImmutableAttrDictProxy(Proxy):
         error_pattern = "'{type}' object has no attribute '{name}'"
         error_message = error_pattern.format(type=getname(type(self._target)), name=item)
         raise AttributeError(error_message)
-
-    def __setitem__(self, key, value):
-        raise TypeError('Immutable dict does not support item assignment')
-
-    def __delitem__(self, key):
-        raise TypeError("Immutable dict doesn't support item deletion")
