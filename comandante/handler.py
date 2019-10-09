@@ -87,9 +87,6 @@ class Handler:
 
         print(self._commands[command].full_doc())
 
-    def _help_command(self, command_name):
-        """Print help for a particular command."""
-
     @property
     def name(self):
         return self._name
