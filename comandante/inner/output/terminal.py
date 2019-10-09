@@ -19,9 +19,12 @@ class Terminal:
     @staticmethod
     def detect(max_cols=DEFAULT_MAX_COLS, min_cols=DEFAULT_MIM_COLS):
         if hasattr(os, 'get_terminal_size'):
-            cols, lines = os.get_terminal_size()
-            cols = min(max_cols, max(min_cols, cols))
-            return Terminal(cols=cols, lines=lines)
+            try:
+                cols, lines = os.get_terminal_size()
+                cols = min(max_cols, max(min_cols, cols))
+                return Terminal(cols=cols, lines=lines)
+            except OSError:  # in case of inappropriate device ioctl
+                pass
         return Terminal(cols=max_cols)
 
     def __init__(self, cols=DEFAULT_MAX_COLS, lines=1):
