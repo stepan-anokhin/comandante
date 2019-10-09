@@ -152,13 +152,13 @@ class HelpWriter:
         first = textwrap.TextWrapper(
             initial_indent=paragraph.initial_indent,
             subsequent_indent=paragraph.subsequent_indent,
-            width=self._terminal.width)
+            width=self._terminal.cols)
 
         # subsequent lines wrapper
         subsequent = textwrap.TextWrapper(
             initial_indent=paragraph.subsequent_indent,
             subsequent_indent=paragraph.subsequent_indent,
-            width=self._terminal.width)
+            width=self._terminal.cols)
 
         paragraph_lines = paragraph.text.split('\n')
         wrapped_lines = first.wrap(paragraph_lines[0])

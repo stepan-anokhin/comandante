@@ -8,39 +8,30 @@ and detect properties of terminal viewport
 to which help the output will be printed.
 """
 
-import platform
-import subprocess
+import os
 
 
 class Terminal:
     """Terminal properties."""
-    PREFERRED_WIDTH = 70
+    DEFAULT_MAX_COLS = 70
+    DEFAULT_MIM_COLS = 30
 
     @staticmethod
-    def detect(max_width=PREFERRED_WIDTH):
-        system = platform.system()
-        if system == 'Linux':
-            width, height = Terminal._terminal_geometry_linux(default_width=max_width)
-            return Terminal(width=min(width, max_width), height=height)
-        return Terminal(width=max_width)
+    def detect(max_cols=DEFAULT_MAX_COLS, min_cols=DEFAULT_MIM_COLS):
+        if hasattr(os, 'get_terminal_size'):
+            cols, lines = os.get_terminal_size()
+            cols = min(max_cols, max(min_cols, cols))
+            return Terminal(cols=cols, lines=lines)
+        return Terminal(cols=max_cols)
 
-    @staticmethod
-    def _terminal_geometry_linux(default_width):
-        try:
-            output = subprocess.check_output(['stty', 'size'], stderr=False)
-            height, width = tuple(map(int, output.split()))
-            return width, height
-        except (OSError, subprocess.CalledProcessError):
-            return default_width, 1
-
-    def __init__(self, width=60, height=1, ):
-        self._width = width
-        self._height = height
+    def __init__(self, cols=DEFAULT_MAX_COLS, lines=1):
+        self._cols = cols
+        self._lines = lines
 
     @property
-    def width(self):
-        return self._width
+    def cols(self):
+        return self._cols
 
     @property
-    def height(self):
-        return self._height
+    def lines(self):
+        return self._lines
