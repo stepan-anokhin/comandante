@@ -60,5 +60,23 @@ class Proxy:
     def __eq__(self, other):
         return self._target == other
 
+    def __ge__(self, other):
+        return self._target >= other
+
+    def __gt__(self, other):
+        return self._target > other
+
+    def __le__(self, other):
+        return self._target <= other
+
+    def __lt__(self, other):
+        return self._target < other
+
+    def __ne__(self, other):
+        return self._target != other
+
+    def __dir__(self):
+        return dir(self._target)
+
     def __contains__(self, item):
         return item in self._target
