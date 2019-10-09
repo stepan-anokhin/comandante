@@ -58,7 +58,7 @@ class Handler:
             return
         command_name, argv = argv[0], argv[1:]
         if command_name not in self._commands:
-            self._print("Unknown command: '{name}'".format(name=command_name))
+            print("Unknown command: '{name}'".format(name=command_name))
             self.help()
             return
 
@@ -66,33 +66,29 @@ class Handler:
             command = self._commands.get(command_name, self.help)
             return command.invoke(*argv)
         except CliSyntaxException as e:
-            self._print(str(e))
+            print(str(e))
             self.help(command_name)
 
     @decor.command()
-    def help(self, command=None):
-        """Display help information about
+    def help(self, command=None, *subcommands):
+        """Display help information
 
-        With no [command] given, the synopsis of the {name} and a
+        With no <command_name> given, the synopsis and a
         list of commands are printed on the standard output.
         """
         if command is None:
-            self._print(self.full_doc())
+            print(self.full_doc())
             return
 
         if command not in self._commands:
-            self._print("Unknown command: {name}".format(name=command))
-            self._print(self.full_doc())
+            print("Unknown command: {name}".format(name=command))
+            print(self.full_doc())
             return
 
-        self._print(self._commands[command].full_doc())
+        print(self._commands[command].full_doc())
 
     def _help_command(self, command_name):
         """Print help for a particular command."""
-
-    def _print(self, *args):
-        """Print output. Is convenient to intercept cli-handler's output."""
-        print(*args)  # TODO: redirect output
 
     @property
     def name(self):
