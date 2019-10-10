@@ -23,6 +23,10 @@ class Proxy:
             stub.__name__ = name
             super().__setattr__(name, stub)
 
+    def _set(self, name, value):
+        """Set attribute on the proxy itself."""
+        object.__setattr__(self, name, value)
+
     def __init__(self, target):
         super().__setattr__('_target', target)
 
@@ -34,7 +38,7 @@ class Proxy:
         """Delegate attribute assign to the underlying object."""
         if hasattr(self._target, key):
             setattr(self._target, key, value)
-        object.__setattr__(self, key, value)
+        self._set(key, value)
 
     def __setitem__(self, key, value):
         self._target[key] = value

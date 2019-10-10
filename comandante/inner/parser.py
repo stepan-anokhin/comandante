@@ -29,7 +29,6 @@ class Parser:
         :param arguments: command arguments (order is essential)
         :param vararg: var-arg descriptor (could be `None`)
         """
-        self._options = options
         self._arguments = tuple(arguments)
         self._vararg = vararg
         self._opt_names = {}
@@ -64,15 +63,7 @@ class Parser:
                 raise CliSyntaxException("Duplicated option: '{name}'".format(name=name))
             options[name] = value
 
-        merged_options = self._default_options()
-        merged_options.update(options)
-        return merged_options, reversed(remain)
-
-    def _default_options(self):
-        result = {}
-        for option in self._options:
-            result[option.name] = option.default
-        return result
+        return options, reversed(remain)
 
     @staticmethod
     def _more_options(remain):
@@ -115,12 +106,12 @@ class Parser:
         def parser(remain):
             """Generic option value parser."""
             if len(remain) == 0:
-                raise CliSyntaxException("Option '{name}' is missing argument value".format(name=option.name))
+                raise CliSyntaxException("Option '{name}' is missing its argument".format(name=option.name))
             value = remain.pop()
             try:
                 return option.type(value)
             except ValueError:
-                pattern = "Invalid value format for option: '{name}'\nExpected type: {type}\nActual value: '{value}'"
+                pattern = "Invalid value for option '{name}' of type '{type}': '{value}'"
                 message = pattern.format(name=option.name, value=value, type=option.type.__name__)
                 raise CliSyntaxException(message)
 

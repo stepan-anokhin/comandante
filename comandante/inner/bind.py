@@ -27,7 +27,7 @@ class BoundCommand(Proxy):
         :param handler: cli-handler (a collection of commands)
         """
         super().__init__(command)
-        super().__setattr__('_handler', handler)
+        self._set('_handler', handler)
 
     def __getattr__(self, item):
         """Redirect attribute access to the underlying command."""
@@ -50,31 +50,6 @@ class BoundCommand(Proxy):
     def command(self):
         """Get underlying bound command."""
         return self._target
-
-
-class HandlerWithOptions(Proxy):
-    """Handler proxy with specified option values."""
-
-    def __init__(self, handler, options):
-        """Initialize instance.
-
-        :param handler: handler to wrap around.
-        :param options: dict containing option values to be set.
-        """
-        super().__init__(handler)
-        super().__setattr__('_options', AttributeDict(options.copy()))
-
-    def __getattr__(self, item):
-        """Delegate attribute access to the underlying handler."""
-        value = getattr(self._target, item)
-        if type(value) is BoundCommand:
-            return BoundCommand(value.command, self)
-        return value
-
-    @property
-    def options(self):
-        """Get options."""
-        return self._option
 
 
 class ImmutableDict(Proxy):

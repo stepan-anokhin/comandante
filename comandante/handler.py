@@ -9,7 +9,7 @@ a command-line interface handler.
 
 import comandante.decorators as decor
 from comandante.errors import CliSyntaxException
-from comandante.inner.bind import HandlerWithOptions, BoundCommand, ImmutableDict
+from comandante.inner.bind import BoundCommand, ImmutableDict, AttributeDict
 from comandante.inner.helpers import describe, getname
 from comandante.inner.model import Option, Command
 from comandante.inner.output.help_writer import HelpWriter
@@ -39,7 +39,6 @@ class Handler:
         self._declared_options = {}
         self._short_options = set()
         self._brief, self._descr = self._describe()
-        self._options = {}
         self._discover_commands()
 
     def _discover_commands(self):
@@ -171,18 +170,6 @@ class Handler:
     def declared_commands(self):
         """Get declared commands."""
         return ImmutableDict(self._commands)
-
-    def with_options(self, **options):
-        """Get a proxy with options being temporary set to the given values.
-
-        :param options: option values as kv-args
-        """
-        return HandlerWithOptions(self, options)
-
-    @property
-    def options(self):
-        """Get option values."""
-        return self._options
 
     def __getattr__(self, item):
         if item not in self._commands:

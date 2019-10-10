@@ -15,7 +15,7 @@ import inspect
 import itertools
 import re
 
-from comandante.inner.bind import ImmutableDict
+from comandante.inner.bind import ImmutableDict, AttributeDict
 from comandante.inner.helpers import describe
 from comandante.inner.output.help_writer import HelpWriter
 from comandante.inner.parser import Parser
@@ -413,27 +413,24 @@ class Command:
         """Get command options."""
         return ImmutableDict(self._declared_options)
 
+    def options(self, specified_options):
+        """Get merged options values."""
+        return Options(specified_options, self.declared_options.values())
+
     def __call__(self, *args, **kwargs):
         """Redirect function-like calls to the underlying function/method."""
         return self.func(*args, **kwargs)
 
     def invoke(self, handler, *argv):
         """Invoke command with the raw command-line arguments."""
-        parser = Parser(self._all_options(handler), self.signature.arguments, self.signature.vararg)
+        parser = Parser(self.declared_options.values(), self.signature.arguments, self.signature.vararg)
         options, arguments = parser.parse(argv)
         return self._do_invoke(handler, arguments, options)
-
-    def _all_options(self, handler):
-        """Merge all declared options."""
-        options = {}
-        options.update(handler.declared_options)
-        options.update(self.declared_options)
-        return options.values()
 
     def _do_invoke(self, handler, arguments, options):
         """Do invoke command with parsed arguments and option values."""
         if self.signature.is_method:
-            arguments = (handler.with_options(**options),) + tuple(arguments)
+            arguments = (handler,) + tuple(arguments)
         if self.signature.accepts_options:
             return self.func(*arguments, **options)
         return self.func(*arguments)
@@ -453,3 +450,16 @@ class Command:
             descr=self.descr)
         copy.use_options(self.declared_options.values())
         return copy
+
+
+class Options(AttributeDict):
+    def __init__(self, specified, declared):
+        super().__init__(dict())
+        self._set('_specified', set(specified.keys()))
+        for option in declared:
+            self._target[option.name] = option.default
+        self._target.update(specified)
+
+    def is_specified(self, name):
+        """Check if option is specified."""
+        return name in self._specified
