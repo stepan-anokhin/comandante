@@ -2,6 +2,10 @@
     <img src="https://raw.githubusercontent.com/stepan-anokhin/comandante/master/logo.png" width="500" alt="Comandante Logo">
 </p>
 
+# Comandante
+[![Build Status](https://travis-ci.org/stepan-anokhin/comandante.svg?branch=master)](https://travis-ci.org/stepan-anokhin/comandante)
+
+
 Comandante is a toolkit for building command-line interfaces in Python.
 
 ### NOTE: Currently the documentation is outdated. It will be updated very soon. Some of the API changes haven't been reflected yet.
