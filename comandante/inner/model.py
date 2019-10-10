@@ -291,6 +291,7 @@ class Signature:
         return self._is_method
 
     def copy(self):
+        """Create a fresh copy of the Signature instance."""
         return Signature(
             required=self.required,
             optional=self.optional,
@@ -443,6 +444,7 @@ class Command:
         return help_writer.document_command(self, full_name)
 
     def copy(self):
+        """Create a fresh copy of the command instance."""
         copy = Command(
             func=self.func,
             name=self.name,
