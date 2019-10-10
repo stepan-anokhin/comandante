@@ -37,6 +37,7 @@ class Handler:
         self._name = name or getname(type(self)).lower()
         self._commands = {}
         self._declared_options = {}
+        self._short_options = set()
         self._brief, self._descr = self._describe()
         self._options = {}
         self._discover_commands()
@@ -121,6 +122,7 @@ class Handler:
         if name in self._commands:
             raise RuntimeError("Duplicate command name: {name}".format(name=name))
         self._commands[name] = handler
+        handler.use_options(self.declared_options.values())
 
     def declare_option(self, name, short, type, default, descr=""):
         """Declare a new option.
@@ -135,9 +137,28 @@ class Handler:
         :param descr: option description
         """
         if name in self.declared_options:
-            raise ValueError("Duplicate option name: '{name}'".format(name=name))
+            raise ValueError("Duplicate option name: '--{name}'".format(name=name))
+        if short in self._short_options:
+            raise ValueError("Duplicate option name: '-{name}'".format(name=short))
         option = Option(name=name, short=short, type=type, default=default, descr=descr)
         self._declared_options[option.name] = option
+        self._short_options.add(short)
+        for command in self.declared_commands.values():
+            command.use_option(option)
+
+    def use_option(self, option):
+        """Declare identical option."""
+        self.declare_option(
+            name=option.name,
+            short=option.short,
+            type=option.type,
+            default=option.default,
+            descr=option.descr)
+
+    def use_options(self, options):
+        """Declare options identical to provided."""
+        for option in options:
+            self.use_option(option)
 
     @property
     def declared_options(self):

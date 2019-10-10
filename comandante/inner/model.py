@@ -339,7 +339,7 @@ class Command:
         self._brief = brief
         self._descr = descr
         self._declared_options = {}
-        self._declared_options_short = {}
+        self._declared_options_short = set()
 
     def declare_option(self, name, short, type, default, descr=""):
         """Declare a new option for the given command.
@@ -351,9 +351,27 @@ class Command:
         :param default: option default value
         :param descr: option description
         """
+        if name in self._declared_options:
+            raise RuntimeError("Duplicate option '--{option}' for command '{name}'".format(option=name, name=self.name))
+        if short in self._declared_options_short:
+            raise RuntimeError("Duplicate option '-{option}' for command '{name}'".format(option=short, name=self.name))
         option = Option(name=name, short=short, type=type, default=default, descr=descr)
         self._declared_options[option.name] = option
-        self._declared_options_short[option.short] = option
+        self._declared_options_short.add(short)
+
+    def use_option(self, option):
+        """Declare identical option."""
+        self.declare_option(
+            name=option.name,
+            short=option.short,
+            type=option.type,
+            default=option.default,
+            descr=option.descr)
+
+    def use_options(self, options):
+        """Declare identical options."""
+        for option in options:
+            self.use_option(option)
 
     @property
     def func(self):
