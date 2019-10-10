@@ -15,6 +15,7 @@ import inspect
 import itertools
 import re
 
+from comandante.inner.bind import ImmutableDict
 from comandante.inner.helpers import describe
 from comandante.inner.output.help_writer import HelpWriter
 from comandante.inner.parser import Parser
@@ -409,7 +410,7 @@ class Command:
     @property
     def declared_options(self):
         """Get command options."""
-        return self._declared_options  # TODO: use immutable proxy
+        return ImmutableDict(self._declared_options)
 
     def __call__(self, *args, **kwargs):
         """Redirect function-like calls to the underlying function/method."""
