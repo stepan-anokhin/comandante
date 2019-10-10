@@ -39,10 +39,14 @@ class Handler:
         self._declared_options = {}
         self._brief, self._descr = self._describe()
         self._options = {}
+        self._discover_commands()
+
+    def _discover_commands(self):
+        """Discover commands declared as class-methods."""
         for name in dir(self):
             attr = getattr(self, name)
             if type(attr) is BoundCommand:
-                self._commands[name] = attr
+                self.declare_command(attr.name, attr)
 
     def _describe(self):
         """Derive description from the docstring."""
@@ -112,13 +116,13 @@ class Handler:
         help_writer = HelpWriter()
         return help_writer.document_handler(self, full_name)
 
-    def subcommand(self, name, handler):
+    def declare_command(self, name, handler):
         """Declare subcommand."""
         if name in self._commands:
             raise RuntimeError("Duplicate command name: {name}".format(name=name))
         self._commands[name] = handler
 
-    def option(self, name, short, type, default, descr=""):
+    def declare_option(self, name, short, type, default, descr=""):
         """Declare a new option.
 
         Option defined by this method will be available for
