@@ -9,3 +9,6 @@ comandante.egg-info
 
 # cache
 **/__pycache__
+
+# compiled files
+**/*.pyc
