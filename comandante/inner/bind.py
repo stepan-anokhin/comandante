@@ -10,7 +10,7 @@ from comandante.inner.helpers import getname
 from comandante.inner.proxy import Proxy
 
 
-class BoundCommand:
+class BoundCommand(Proxy):
     """Command bound to a particular handler.
 
     Represents a command accessed from a particular handler object
@@ -26,8 +26,8 @@ class BoundCommand:
         :param command: cli-command (wrapper around python function)
         :param handler: cli-handler (a collection of commands)
         """
-        self._command = command
-        self._handler = handler
+        super().__init__(command)
+        super().__setattr__('_handler', handler)
 
     def __getattr__(self, item):
         """Redirect attribute access to the underlying command."""
@@ -49,7 +49,7 @@ class BoundCommand:
     @property
     def command(self):
         """Get underlying bound command."""
-        return self._command
+        return self._target
 
 
 class CommandMethodDescriptor:
