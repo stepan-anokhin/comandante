@@ -289,6 +289,14 @@ class Signature:
         """Check if the underlying python function is method accepting `self` as a first argument."""
         return self._is_method
 
+    def copy(self):
+        return Signature(
+            required=self.required,
+            optional=self.optional,
+            vararg=self.vararg,
+            accepts_options=self.accepts_options,
+            is_method=self.is_method)
+
 
 class Command:
     """Cli-command.
@@ -432,3 +440,13 @@ class Command:
         """Get command full formatted documentation."""
         help_writer = HelpWriter()
         return help_writer.document_command(self, full_name)
+
+    def copy(self):
+        copy = Command(
+            func=self.func,
+            name=self.name,
+            signature=self.signature.copy(),
+            brief=self.brief,
+            descr=self.descr)
+        copy.use_options(self.declared_options.values())
+        return copy

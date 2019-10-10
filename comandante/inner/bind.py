@@ -52,32 +52,6 @@ class BoundCommand(Proxy):
         return self._target
 
 
-class CommandMethodDescriptor:
-    """Command-as-an-attribute descriptor.
-
-    Wrapper around cli-command defined as a Handler method.
-    CommandMethodDescriptor carries out automatic handler-to-command binding when
-    accessed as a handler's attribute.
-
-    See https://docs.python.org/3/reference/datamodel.html#implementing-descriptors
-    """
-
-    def __init__(self, command):
-        """Initialize instance.
-
-        :param command: command to be wrapped around.
-        """
-        self._command = command
-
-    def __get__(self, instance, owner):
-        """Bind wrapped command to the handler instance when accessed as handler's attribute."""
-        return BoundCommand(self._command, instance)
-
-    def __getattr__(self, item):
-        """Delegate attribute access to the wrapped cli-command."""
-        return getattr(self._command, item)
-
-
 class HandlerWithOptions(Proxy):
     """Handler proxy with specified option values."""
 

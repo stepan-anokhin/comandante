@@ -8,7 +8,6 @@ functions and handler methods with comandante domain
 model.
 """
 
-from comandante.inner.bind import CommandMethodDescriptor
 from comandante.inner.model import Command
 
 
@@ -21,8 +20,7 @@ def command(name=None):
 
     def decorator(method):
         """Decorator converting method to cli-command."""
-        cmd = Command.from_function(method, name, is_method=True)
-        return CommandMethodDescriptor(cmd)
+        return Command.from_function(method, name, is_method=True)
 
     return decorator
 
@@ -38,9 +36,9 @@ def option(name, short, type, default, descr):
     :return: a new decorator that will declare option for marked command
     """
 
-    def decorator(cmd):
+    def decorator(element):
         """Decorator declaring a new option."""
-        cmd.declare_option(name=name, short=short, type=type, default=default, descr=descr)
-        return cmd
+        element.declare_option(name=name, short=short, type=type, default=default, descr=descr)
+        return element
 
     return decorator

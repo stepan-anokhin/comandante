@@ -9,9 +9,9 @@ a command-line interface handler.
 
 import comandante.decorators as decor
 from comandante.errors import CliSyntaxException
-from comandante.inner.bind import BoundCommand, HandlerWithOptions
+from comandante.inner.bind import HandlerWithOptions, BoundCommand
 from comandante.inner.helpers import describe, getname
-from comandante.inner.model import Option
+from comandante.inner.model import Option, Command
 from comandante.inner.output.help_writer import HelpWriter
 
 
@@ -45,9 +45,11 @@ class Handler:
     def _discover_commands(self):
         """Discover commands declared as class-methods."""
         for name in dir(self):
-            attr = getattr(self, name)
-            if type(attr) is BoundCommand:
-                self.declare_command(attr.name, attr)
+            value = getattr(self, name)
+            if type(value) is Command:
+                bound_command = BoundCommand(command=value.copy(), handler=self)
+                setattr(self, name, bound_command)
+                self.declare_command(bound_command.name, bound_command)
 
     def _describe(self):
         """Derive description from the docstring."""
