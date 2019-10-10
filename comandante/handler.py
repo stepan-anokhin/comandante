@@ -8,8 +8,8 @@ a command-line interface handler.
 """
 
 import comandante.decorators as decor
-from comandante.errors import CliSyntaxException
-from comandante.inner.bind import BoundCommand, ImmutableDict, AttributeDict
+from comandante.errors import UnknownCommand
+from comandante.inner.bind import BoundCommand, ImmutableDict
 from comandante.inner.helpers import describe, getname
 from comandante.inner.model import Option, Command
 from comandante.inner.output.help_writer import HelpWriter
@@ -35,7 +35,7 @@ class Handler:
         cli-commands.
         """
         self._name = name or getname(type(self)).lower()
-        self._commands = {}
+        self._declared_commands = {}
         self._declared_options = {}
         self._short_options = set()
         self._brief, self._descr = self._describe()
@@ -57,23 +57,20 @@ class Handler:
             return '', ''
         return describe(self)
 
-    def invoke(self, *argv):
+    def invoke(self, argv, context=()):
         """Invoke cli-handler with the given raw command-line arguments."""
         if len(argv) == 0:
             self.help()
             return
         command_name, argv = argv[0], argv[1:]
-        if command_name not in self._commands:
-            print("Unknown command: '{name}'".format(name=command_name))
+        if command_name not in self._declared_commands:
+            error_message = "Unknown command: '{name}'".format(name=' '.join(context + (command_name,)))
+            print(error_message)
             self.help()
-            return
+            raise UnknownCommand(error_message)
 
-        try:
-            command = self._commands.get(command_name, self.help)
-            return command.invoke(*argv)
-        except CliSyntaxException as e:
-            print(str(e))
-            self.help(command_name)
+        command = self._declared_commands.get(command_name, self.help)
+        return command.invoke(argv, context + (command_name,))
 
     @decor.command()
     def help(self, command=None, *subcommands):
@@ -120,9 +117,9 @@ class Handler:
 
     def declare_command(self, name, handler):
         """Declare subcommand."""
-        if name in self._commands:
+        if name in self._declared_commands:
             raise RuntimeError("Duplicate command name: {name}".format(name=name))
-        self._commands[name] = handler
+        self._declared_commands[name] = handler
         handler.use_options(self.declared_options.values())
 
     def declare_option(self, name, short, type, default, descr=""):
@@ -169,9 +166,9 @@ class Handler:
     @property
     def declared_commands(self):
         """Get declared commands."""
-        return ImmutableDict(self._commands)
+        return ImmutableDict(self._declared_commands)
 
     def __getattr__(self, item):
-        if item not in self._commands:
+        if item not in self._declared_commands:
             raise AttributeError("{type} object has no attribute {name}".format(type=type(self).__name__, name=item))
-        return self._commands[item]
+        return self._declared_commands[item]

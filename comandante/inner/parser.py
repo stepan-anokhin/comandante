@@ -10,7 +10,7 @@ to the command line description in terms of domain model.
 
 import itertools
 
-from comandante.errors import CliSyntaxException
+import comandante.errors as error
 from comandante.inner.helpers import getname
 
 
@@ -60,7 +60,7 @@ class Parser:
         while self._more_options(remain):
             name, value = self._parse_option(remain)
             if name in options:
-                raise CliSyntaxException("Duplicated option: '{name}'".format(name=name))
+                raise error.DuplicateOption("Duplicated option: '{name}'".format(name=name))
             options[name] = value
 
         return options, reversed(remain)
@@ -82,12 +82,12 @@ class Parser:
         if argument.startswith('--'):
             option_name = argument[2:]
             if option_name not in self._opt_names:
-                raise CliSyntaxException("Unknown option: '{option}'".format(option=argument))
+                raise error.UnknownOption("Unknown option: '{option}'".format(option=argument))
             return self._opt_names[option_name]
         elif argument.startswith('-'):
             option_name = argument[1:]
             if option_name not in self._opt_short_names:
-                raise CliSyntaxException("Unknown option: '{option}'".format(option=argument))
+                raise error.UnknownOption("Unknown option: '{option}'".format(option=argument))
             return self._opt_short_names[option_name]
         else:
             raise RuntimeError("Cannot read option. Remaining arguments: {args}".format(args=list(reversed(remain))))
@@ -106,14 +106,14 @@ class Parser:
         def parser(remain):
             """Generic option value parser."""
             if len(remain) == 0:
-                raise CliSyntaxException("Option '{name}' is missing its argument".format(name=option.name))
+                raise error.MissingOptionValue("Option '{name}' is missing its argument".format(name=option.name))
             value = remain.pop()
             try:
                 return option.type(value)
             except ValueError:
                 pattern = "Invalid value for option '{name}' of type '{type}': '{value}'"
                 message = pattern.format(name=option.name, value=value, type=option.type.__name__)
-                raise CliSyntaxException(message)
+                raise error.InvalidValue(message)
 
         return parser
 
@@ -123,9 +123,9 @@ class Parser:
         for argument, value in itertools.zip_longest(self._arguments, remain):
             argument = argument or self._vararg
             if argument is None:
-                raise CliSyntaxException("Too many arguments.")
+                raise error.TooManyArguments("Too many arguments.")
             if argument.is_required() and value is None:
-                raise CliSyntaxException("Required argument is not specified: '{name}'".format(name=argument.name))
+                raise error.ArgumentMissing("Required argument is not specified: '{name}'".format(name=argument.name))
             if not argument.is_required() and value is None:
                 values.append(argument.default)
                 continue
@@ -146,6 +146,6 @@ class Parser:
             except ValueError as e:
                 error_pattern = "Invalid value for argument '{name}' of type '{type}': '{value}'"
                 error_message = error_pattern.format(name=argument.name, type=getname(argument.type), value=value)
-                raise CliSyntaxException(error_message)
+                raise error.InvalidValue(error_message)
 
         return parser

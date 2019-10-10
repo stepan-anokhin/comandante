@@ -15,6 +15,7 @@ import inspect
 import itertools
 import re
 
+from comandante.errors import CliSyntaxException
 from comandante.inner.bind import ImmutableDict, AttributeDict
 from comandante.inner.helpers import describe
 from comandante.inner.output.help_writer import HelpWriter
@@ -383,6 +384,13 @@ class Command:
         for option in options:
             self.use_option(option)
 
+    def default_options(self):
+        """Get default option values."""
+        options = {}
+        for option in self.declared_options.values():
+            options[option.name] = option.default
+        return Options(options, self.declared_options.values())
+
     @property
     def func(self):
         """Get underlying callable object."""
@@ -421,10 +429,16 @@ class Command:
         """Redirect function-like calls to the underlying function/method."""
         return self.func(*args, **kwargs)
 
-    def invoke(self, handler, *argv):
+    def invoke(self, handler, argv, context=None):
         """Invoke command with the raw command-line arguments."""
-        parser = Parser(self.declared_options.values(), self.signature.arguments, self.signature.vararg)
-        options, arguments = parser.parse(argv)
+        context = context or (self.name,)
+        try:
+            parser = Parser(self.declared_options.values(), self.signature.arguments, self.signature.vararg)
+            options, arguments = parser.parse(argv)
+        except CliSyntaxException as e:
+            print(str(e))
+            print(self.full_doc(full_name=context))
+            raise
         return self._do_invoke(handler, arguments, options)
 
     def _do_invoke(self, handler, arguments, options):

@@ -25,7 +25,7 @@ def command(name=None):
     return decorator
 
 
-def option(name, short, type, default, descr):
+def option(name, short, type, default, descr=''):
     """Declare a new option for the given cli-command.
 
     :param name: option name
