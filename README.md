@@ -4,6 +4,8 @@
 
 Comandante is a toolkit for building command-line interfaces in Python.
 
+### NOTE: Currently the documentation is outdated. It will be updated very soon. Some of the API changes haven't been reflected yet.
+
 ## Table of Contents
 - [Installation](#installation)
 - [Getting Started](#getting-started)
