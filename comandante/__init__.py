@@ -10,5 +10,13 @@ https://github.com/stepan-anokhin/comandante/blob/master/README.md
 """
 
 from .decorators import option, command
-from .errors import CliSyntaxException
 from .handler import Handler
+from .types import choice, listof
+
+__all__ = [
+    'option',
+    'command',
+    'choice',
+    'listof'
+    'Handler',
+]
