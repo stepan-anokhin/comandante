@@ -386,10 +386,7 @@ class Command:
 
     def default_options(self):
         """Get default option values."""
-        options = {}
-        for option in self.declared_options.values():
-            options[option.name] = option.default
-        return Options(options, self.declared_options.values())
+        return Options({}, self.declared_options.values())
 
     @property
     def func(self):
