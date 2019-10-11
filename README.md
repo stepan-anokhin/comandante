@@ -100,17 +100,9 @@ So in other words to create a command-line interface you simply:
 
 
 ### Just a Normal Classes and Methods
-No surprises! In Comandante handlers and commands are just a normal 
-classes and methods!
- 
-Handlers may have any methods, fields, subclasses, decorations, 
-constructor arguments, etc.  
-All methods decorated with `@comandante.command()` (let's call them 
-*command-methods*) are *almost* ordinary Python methods (they are
-methods wrapped into `comandante.Command` class). Command-methods
-could be used just like a normal Python methods. 
+No surprises! Handlers and commands are just a normal classes and methods.
 
-So in the example above you may simply call `CliTool#sum`: 
+So in the example above you may simply call `CliTool#sum` as usual: 
 ```python
 tool = CliTool()
 result = tool.sum(1, 2)
@@ -269,7 +261,71 @@ Adding repository origin git@github.com:stepan-anokhin/comandante.git
 $ ./git remote rename origin destination
 Renaming repository origin destination
 ```
-## Argument Types
+## Arguments
+
+In python3 command argument types are declared using annotations:
+```python
+import comandante as cli
+
+class CliTool(cli.Handler):
+
+    @cli.command()
+    def do_something(self, a: int, b: float, c: str):
+        print(a + b, c)
+```
+Type could be any callable. This callable will be simply called with 
+a command-line string as the only argument. A result will be passed
+to the *command-method* as argument. The same is true for option types. 
+ 
+The only exception is `bool` arguments and options. Bool option doesn't 
+receive any value, if specified it is considered to be `True` otherwise 
+default value is used. 
+
+If no argument type is specified, then `str` is assumed by default. 
+Type's `__name__` attribute is used in automatic help output to 
+represent argument/option type. 
+
+Comandante honors default argument values and varargs:
+```python
+#!/usr/bin/env python3
+import sys, comandante as cli
+
+class CliTool(cli.Handler):
+
+    @cli.command()
+    def sum(self, *values: int):
+        print(sum(values))
+        
+    @cli.command()
+    def repeat(self, message, times: int = 2):
+        for i in range(times):
+            print(message)
+
+CliTool().invoke(sys.argv[1:])
+```
+```shell
+$ ./tool sum 1 2 3 4 5
+15
+```
+```shell
+$ ./tool repeat "Hello world!"
+Hello world!
+Hello world!
+```
+### Python 2
+
+***TO BE DONE***: Python 2 doesn't support parameter annotations. 
+To specify argument types use `@comandante.argtypes()`
+```python
+import comandante as cli
+
+class CliTool(cli.Handler):
+
+    @cli.argtypes(a=int, b=float)
+    @cli.command()
+    def do_something(self, a, b, c):
+        print(a + b, c)
+```
 
 ## Printing Help
 
