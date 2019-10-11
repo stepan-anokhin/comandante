@@ -5,8 +5,9 @@ python:
   - "3.6"
   - "3.7"
 # command to install dependencies:
-#install:
-#  - pip install -r requirements.txt
+install:
+  - pip install coveralls
 # command to run tests
 script:
-  - python3 setup.py test
+  - coverage run --source=comandante setup.py test
+  - coveralls
