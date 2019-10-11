@@ -24,12 +24,6 @@ Comandante is a toolkit for building command-line interfaces in Python.
 - [Printing Help](#printing-help)
 - [Error Handling](#error-handling)
 - [Testing Your CLI](#testing-your-cli)
-- [Design Considerations](#design-considerations)
-- [API Reference](#api-reference)
-  - [Handler](#handler)
-  - [Command](#command)
-  - [Decorators](#decorators)
-- [Contributing](#contributing)
 
 ## Installation
 
@@ -504,15 +498,3 @@ class DatabaseCliTests(TestCase):
 
         fake_database.drop.assert_not_called()
 ```
-
-## Design Considerations
-
-## API Reference
-
-### Handler
-
-### Command
-
-### Decorators
-
-## Contributing
