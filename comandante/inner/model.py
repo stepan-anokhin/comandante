@@ -418,6 +418,11 @@ class Command:
         """Get command options."""
         return ImmutableDict(self._declared_options)
 
+    @property
+    def declared_commands(self):
+        """Always return empty dict"""
+        return dict()
+
     def options(self, specified_options):
         """Get merged options values."""
         return Options(specified_options, self.declared_options.values())
