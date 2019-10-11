@@ -63,12 +63,6 @@ class HelpWriter:
     def paragraphs(self, text):
         return map(Paragraph, self._markup.paragraphs(text))
 
-    def indent(self, text, amount=1):
-        """Indent entire text with the given amount of indentation units."""
-        lines = text.split('\n')
-        indent = self._indent_unit * amount
-        return '\n'.join(map(indent.__add__, lines))
-
     @staticmethod
     def dedent(text):
         """Remove common indent."""
