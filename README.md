@@ -1,12 +1,13 @@
-[![Build Status](https://travis-ci.org/stepan-anokhin/comandante.svg?branch=master)](https://travis-ci.org/stepan-anokhin/comandante)
-[![Coverage Status](https://coveralls.io/repos/github/stepan-anokhin/comandante/badge.svg?branch=master)](https://coveralls.io/github/stepan-anokhin/comandante?branch=master)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/stepan-anokhin/comandante/blob/master/LICENSE)
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/stepan-anokhin/comandante/master/logo.png" width="500" alt="Comandante Logo">
 </p>
 
 Comandante is a toolkit for building command-line interfaces in Python.
+
+[![Build Status](https://travis-ci.org/stepan-anokhin/comandante.svg?branch=master)](https://travis-ci.org/stepan-anokhin/comandante)
+[![Coverage Status](https://coveralls.io/repos/github/stepan-anokhin/comandante/badge.svg?branch=master)](https://coveralls.io/github/stepan-anokhin/comandante?branch=master)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/stepan-anokhin/comandante/blob/master/LICENSE)
 
 ## Table of Contents
 - [Installation](#installation)
@@ -329,9 +330,168 @@ class CliTool(cli.Handler):
 
 ## Printing Help
 
+Comandante provides predefined `help` command for you which will print
+formatted help information to the stdout. Command and handler descriptions
+are taken from the corresponding docstrings. 
+
+Example:
+```python
+import sys
+import comandante as cli
+
+
+class Git(cli.Handler):
+    """The stupid content tracker.
+
+    Git is a fast, scalable, distributed revision control system with
+    an unusually *rich command* set that provides both high-level operations
+    and full access to internals.
+
+    See *gittutorial*(7) to get started, then see *giteveryday*(7) for a useful
+    minimum set of commands. The *Git User’s Manual*[1] has a more in-depth
+    introduction.
+    """
+
+    @cli.option(name='message', short='m', type=str, default='', descr="""
+    Use the given <msg> as the commit message. If multiple *-m* options are 
+    given, their values are concatenated as separate paragraphs.
+    """)
+    @cli.command()
+    def commit(self):
+        """Record changes to the repository
+
+        Create a new commit containing the current contents
+        of the index and the given log message describing
+        the changes. The new commit is a direct child of HEAD,
+        usually the tip of the current branch, and the branch
+        is updated to point to it (unless no branch is associated
+        with the working tree, in which case HEAD is "detached"
+        as described in *git-checkout*(1)).
+        """
+        print("Committing...")
+
+    @cli.command()
+    def clone(self, repository, directory=None):
+        """Clone a repository into a new directory
+
+        Clones a repository into a newly created directory, creates
+        remote-tracking branches for each branch in the cloned
+        repository (visible using git branch *-r*), and creates and
+        checks out an initial branch that is forked from the cloned
+        repository’s currently active branch.
+        """
+        print("Cloning...")
+        
+Git().invoke(sys.argv[1:])
+``` 
+`./git` output:
+<p align="left">
+    <img src="https://raw.githubusercontent.com/stepan-anokhin/comandante/master/docs/images/help_git.png" alt="git">
+</p>
+
+`./git help clone` output:
+<p align="left">
+    <img src="https://raw.githubusercontent.com/stepan-anokhin/comandante/master/docs/images/help_clone.png" alt="git help clone">
+</p>
+
+`./git help commit` output:
+<p align="left">
+    <img src="https://raw.githubusercontent.com/stepan-anokhin/comandante/master/docs/images/help_commit.png" alt="git help commit">
+</p>
+
+
 ## Error Handling
 
+Successful calls to `Handler#invoke` and `Command#invoke` methods return 
+the same value as the corresponding *command-method*. 
+
+By design Comandante doesn't hide any exceptions raised in the course of 
+`invoke` call. The only special case is subclasses of 
+`comandnate.errors.CliSyntaxException` which results in help printing 
+before being re-raised.
+
+So it is up to the caller to decide how to handle exceptions. 
+
+A reasonable error handling may look like this:
+```python
+import sys, logging, comandante as cli
+
+# ... initialize handler and logger ... 
+
+try: 
+    handler.invoke(sys.argv[1:])
+except cli.errors.CliSyntaxException:
+    sys.exit(1)
+except:
+    logger.exception('Unexpected exception')
+    sys.exit(1)
+    
+```  
+
 ## Testing Your CLI
+
+Handlers and commands could be tested just like 
+[any other components](#just-a-normal-classes-and-methods). 
+
+Example cli:
+```python
+import comandante as cli
+
+
+class DatabaseCli(cli.Handler):
+    def __init__(self, database):
+        super().__init__()
+        self._database = database
+
+    @cli.option('force', 'f', bool, False)
+    @cli.command()
+    def drop(self, database_name, **specified_options):
+        options = self.drop.options(specified_options)
+        if options.force or self.confirm():
+            self._database.drop(database_name)
+
+    def confirm(self):
+        question = 'Are you sure? [y/N]: '
+        value = input(question).lower()
+        while value not in ['', 'n', 'y']:
+            print("Please answer 'y' or 'n'")
+            value = input(question)
+        return value == 'y'
+
+``` 
+Example tests:
+```python
+from unittest import TestCase
+from unittest.mock import MagicMock as Mock
+
+
+class DatabaseCliTests(TestCase):
+    def test_forced_database_drop(self):
+        fake_database = Mock()
+        database_cli = DatabaseCli(database=fake_database)
+
+        database_cli.drop('production', force=True)
+
+        fake_database.drop.assert_called_with('production')
+
+    def test_database_drop(self):
+        fake_database = Mock()
+        database_cli = DatabaseCli(database=fake_database)
+        database_cli.confirm = Mock(return_value=True)  # confirm
+
+        database_cli.drop('production')
+
+        fake_database.drop.assert_called_with('production')
+
+    def test_rejected_database_drop(self):
+        fake_database = Mock()
+        database_cli = DatabaseCli(database=fake_database)
+        database_cli.confirm = Mock(return_value=False)  # reject
+
+        database_cli.drop('production')
+
+        fake_database.drop.assert_not_called()
+```
 
 ## Design Considerations
 
