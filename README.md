@@ -4,6 +4,7 @@
 
 [![Build Status](https://travis-ci.org/stepan-anokhin/comandante.svg?branch=master)](https://travis-ci.org/stepan-anokhin/comandante)
 [![Coverage Status](https://coveralls.io/repos/github/stepan-anokhin/comandante/badge.svg?branch=master)](https://coveralls.io/github/stepan-anokhin/comandante?branch=master)
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/stepan-anokhin/comandante/blob/master/LICENSE)
 
 Comandante is a toolkit for building command-line interfaces in Python.
 
