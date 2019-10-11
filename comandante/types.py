@@ -27,5 +27,5 @@ def listof(value_type):
     def result_type(value):
         return list(map(value_type, value.split(',')))
 
-    result_type.__name__ = "list-of({type})".format(type=getname(value_type))
+    result_type.__name__ = "listof({type})".format(type=getname(value_type))
     return result_type
