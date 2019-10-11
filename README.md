@@ -18,7 +18,9 @@ Comandante is a toolkit for building command-line interfaces in Python.
   - [Command Options](#command-options)
   - [Class Options](#class-options)
 - [Subcommands](#subcommands)
-- [Argument Types](#argument-types)
+- [Arguments](#arguments)
+  - [Type Library](#type-library)
+  - [Python 2](#python-2)
 - [Printing Help](#printing-help)
 - [Error Handling](#error-handling)
 - [Testing Your CLI](#testing-your-cli)
@@ -313,6 +315,16 @@ $ ./tool repeat "Hello world!"
 Hello world!
 Hello world!
 ```
+### Type Library
+
+Comandante also provides several higher-order types:
+ * `comandante.types.choice` - to make sure argument value is one of the specified options
+ * `comandante.types.listof` - to parse comma-separated lists (e.g. `listof(int)` will parse `"1,2,3,4"` into `[1, 2, 3, 4]`)
+ 
+You may take a look into the
+[comandante.types](https://github.com/stepan-anokhin/comandante/blob/master/comandante/types.py)
+to get some additional insights.  
+ 
 ### Python 2
 
 ***TO BE DONE***: Python 2 doesn't support parameter annotations. 
@@ -431,7 +443,7 @@ except:
 ## Testing Your CLI
 
 Handlers and commands could be tested just like 
-[any other components](#just-a-normal-classes-and-methods). 
+[any other](#just-a-normal-classes-and-methods) classes and methods. 
 
 Example cli:
 ```python
