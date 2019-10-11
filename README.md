@@ -73,7 +73,7 @@ class CliTool(cli.Handler):
         print(result)
         return result
             
-# Then simply pass command-line arguments to the Tool#invoke
+# Then simply pass command-line arguments to the CliTool#invoke
 CliTool().invoke(sys.argv[1:])
 ```
 
@@ -164,7 +164,7 @@ database_cli.invoke(sys.argv[1:])
 Then in shell:
 ```shell
 $ ./database drop production
-Are you sure? [y/N']: y
+Are you sure? [y/N]: y
 Database 'production' was deleted
 ```
 The following two examples are identical:
