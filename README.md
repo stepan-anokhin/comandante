@@ -317,7 +317,7 @@ to get some additional insights.
  
 ### Python 2
 
-***TO BE DONE***: Python 2 doesn't support parameter annotations. 
+Python 2 doesn't support parameter annotations. 
 To specify argument types use `@comandante.signature()`
 ```python
 import comandante as cli
