@@ -35,10 +35,6 @@ To get the latest release simply install it with a `pip`:
 pip3 install --upgrade comandante
 ```
 
-### Python 2 Support
-
-Python 2 support will be added very soon.
-
 ## Getting Started
 
 Some command-line interfaces (like `pip`, `git`, `go`, etc.) 
@@ -322,13 +318,13 @@ to get some additional insights.
 ### Python 2
 
 ***TO BE DONE***: Python 2 doesn't support parameter annotations. 
-To specify argument types use `@comandante.argtypes()`
+To specify argument types use `@comandante.signature()`
 ```python
 import comandante as cli
 
 class CliTool(cli.Handler):
 
-    @cli.argtypes(a=int, b=float)
+    @cli.signature(a=int, b=float)
     @cli.command()
     def do_something(self, a, b, c):
         print(a + b, c)

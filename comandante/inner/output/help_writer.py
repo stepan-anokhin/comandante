@@ -191,7 +191,7 @@ class HelpWriter:
 
         pattern = self.option_pattern(option)
         synopsis = pattern.format(long=option.name, short=option.short, type=getname(option.type))
-        first_paragraph_text = "{synopsis}\n{text}".format(synopsis=synopsis, text=next(descr_paragraphs).text)
+        first_paragraph_text = "{synopsis}\n{text}".format(synopsis=synopsis, text=next(iter(descr_paragraphs)).text)
         first_paragraph = Paragraph(first_paragraph_text, initial_indent='', subsequent_indent=self._indent_unit)
 
         paragraphs.append(first_paragraph)

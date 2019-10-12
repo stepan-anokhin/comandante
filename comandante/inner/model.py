@@ -11,9 +11,12 @@ for parsers and executors to interpret command line
 arguments and execute the corresponding logic.
 """
 
+from __future__ import print_function
+
 import inspect
 import itertools
 import re
+import sys
 
 from comandante.errors import CliSyntaxException
 from comandante.inner.bind import ImmutableDict, AttributeDict
@@ -26,7 +29,7 @@ class _Empty:
     """Marker object for Argument.empty"""
 
 
-class Option:
+class Option(object):
     """Command option descriptor.
 
     Option must have a valid name and a valid short name.
@@ -57,7 +60,7 @@ class Option:
     # Regex-pattern of valid option name.
     # Valid option name starts with alphabetic character and
     # its tail contain any number of alpha-numeric characters.
-    _name_pattern = re.compile(r'[a-zA-Z]\w+')
+    _name_pattern = re.compile(r'^[a-zA-Z]\w+$')
 
     @staticmethod
     def is_valid_name(name):
@@ -66,7 +69,7 @@ class Option:
         :param name: option name to be validated
         :return: True iff name is a valid option name
         """
-        return isinstance(name, str) and bool(Option._name_pattern.fullmatch(name))
+        return isinstance(name, str) and bool(Option._name_pattern.match(name))
 
     def __init__(self, name, short, type, default, descr=""):
         """Initialize an instance.
@@ -112,7 +115,7 @@ class Option:
         return self._descr
 
 
-class Argument:
+class Argument(object):
     """Argument descriptor.
 
     Argument is a command parameter that is essential to what
@@ -158,26 +161,21 @@ class Argument:
     # Marker value indicating that default value is not specified.
     empty = _Empty
 
-    def __init__(self, name, type, default):
+    def __init__(self, name, type, default=empty):
         """Initialize instance.
 
         :param name: argument name
         :param type: argument type
         :param default: default value (Argument.empty if not present)
         """
+        self.type = type
         self._name = name
-        self._type = type
         self._default = default
 
     @property
     def name(self):
         """Get argument name."""
         return self._name
-
-    @property
-    def type(self):
-        """Get argument type."""
-        return self._type
 
     @property
     def default(self):
@@ -189,7 +187,7 @@ class Argument:
         return self.default is Argument.empty
 
 
-class Signature:
+class Signature(object):
     """Command signature descriptor.
 
     Signature represents a sequence of required
@@ -204,7 +202,43 @@ class Signature:
         :param is_method: indicates whether the first argument is `self`
         :return: a new `Signature` derived from the `func`
         """
-        sig = inspect.signature(func)
+        if sys.version_info > (3, 0):
+            sig = inspect.signature(func)
+            return Signature._from_signature(sig, is_method)
+        else:
+            spec = inspect.getargspec(func)
+            return Signature._from_argspec(spec, is_method)
+
+    @staticmethod
+    def _from_argspec(spec, is_method):
+        vararg = None
+        accepts_options = spec.keywords is not None
+        if spec.varargs is not None:
+            vararg = Argument(name=spec.varargs, type=str, default=Argument.empty)
+        argument_names = spec.args
+        if is_method:
+            argument_names = argument_names[1:]
+
+        defaults = spec.defaults or ()
+        required_count = len(argument_names) - len(defaults)
+        required_names = argument_names[:required_count]
+        optional_names = argument_names[required_count:]
+        required = []
+        optional = []
+        for name in required_names:
+            required.append(Argument(name, str))
+        for name, value in zip(optional_names, defaults):
+            optional.append(Argument(name, str, default=value))
+        return Signature(
+            required=required,
+            optional=optional,
+            vararg=vararg,
+            accepts_options=accepts_options,
+            is_method=is_method
+        )
+
+    @staticmethod
+    def _from_signature(sig, is_method):
         required = []
         optional = []
         vararg = None
@@ -237,14 +271,6 @@ class Signature:
         if argument.default is Argument.empty:
             return required
         return optional
-
-    @staticmethod
-    def _params(func, is_method):
-        """Extract parameters from the `func` honoring its nature (method or procedure)."""
-        parameters = inspect.signature(func).parameters.items()
-        if is_method:
-            return itertools.islice(parameters, 1, None)
-        return parameters.items()
 
     def __init__(self, required, optional, vararg=None, accepts_options=False, is_method=False):
         """Initialize instance.
@@ -300,8 +326,15 @@ class Signature:
             accepts_options=self.accepts_options,
             is_method=self.is_method)
 
+    def set_types(self, types):
+        for argument in self.arguments:
+            if argument.name in types:
+                argument.type = types[argument.name]
+        if self.vararg is not None and self.vararg.name in types:
+            self.vararg.type = types[self.vararg.name]
 
-class Command:
+
+class Command(object):
     """Cli-command.
 
     Command represents a single command-line interface method.
@@ -438,7 +471,7 @@ class Command:
             parser = Parser(self.declared_options.values(), self.signature.arguments, self.signature.vararg)
             options, arguments = parser.parse(argv)
         except CliSyntaxException as e:
-            print(str(e))
+            print(e)
             print(self.full_doc(full_name=context))
             raise
         return self._do_invoke(handler, arguments, options)
@@ -470,7 +503,7 @@ class Command:
 
 class Options(AttributeDict):
     def __init__(self, specified, declared):
-        super().__init__(dict())
+        super(Options, self).__init__(dict())
         self._set('_specified', set(specified.keys()))
         for option in declared:
             self._target[option.name] = option.default

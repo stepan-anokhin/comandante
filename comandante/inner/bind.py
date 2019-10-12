@@ -26,7 +26,7 @@ class BoundCommand(Proxy):
         :param command: cli-command (wrapper around python function)
         :param handler: cli-handler (a collection of commands)
         """
-        super().__init__(command)
+        super(BoundCommand, self).__init__(command)
         self._set('_handler', handler)
 
     def __getattr__(self, item):
@@ -49,7 +49,7 @@ class BoundCommand(Proxy):
 
 class ImmutableDict(Proxy):
     def __init__(self, target):
-        super().__init__(target)
+        super(ImmutableDict, self).__init__(target)
         self._unsupport('clear', 'pop', 'popitem', 'update', 'setdefault')
 
     def __setitem__(self, key, value):

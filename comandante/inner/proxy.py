@@ -9,7 +9,7 @@ object proxy class.
 from comandante.inner.helpers import getname
 
 
-class Proxy:
+class Proxy(object):
     """Generic python object proxy."""
 
     def _unsupport(self, *names):
@@ -21,14 +21,14 @@ class Proxy:
                 raise TypeError(message)
 
             stub.__name__ = name
-            super().__setattr__(name, stub)
+            self._set(name, stub)
 
     def _set(self, name, value):
         """Set attribute on the proxy itself."""
         object.__setattr__(self, name, value)
 
     def __init__(self, target):
-        super().__setattr__('_target', target)
+        self._set('_target', target)
 
     def __getattr__(self, item):
         """Delegate attribute access to the underlying object."""

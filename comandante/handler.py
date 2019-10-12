@@ -7,6 +7,8 @@ This module defines a core concept of comandante -
 a command-line interface handler.
 """
 
+from __future__ import print_function
+
 import comandante.decorators as decor
 from comandante.errors import UnknownCommand
 from comandante.inner.bind import BoundCommand, ImmutableDict
@@ -15,7 +17,7 @@ from comandante.inner.model import Option, Command
 from comandante.inner.output.help_writer import HelpWriter
 
 
-class Handler:
+class Handler(object):
     """Command-line interface handler.
 
     Handler represents a collection of cli-commands invoked by their names.

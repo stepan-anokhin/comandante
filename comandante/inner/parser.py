@@ -8,10 +8,15 @@ for reading and interpreting command-line arguments according
 to the command line description in terms of domain model.
 """
 
-import itertools
+import sys
 
 import comandante.errors as error
 from comandante.inner.helpers import getname
+
+if sys.version_info > (3, 0):
+    from itertools import zip_longest
+else:
+    from itertools import izip_longest as zip_longest
 
 
 class Parser:
@@ -120,7 +125,7 @@ class Parser:
     def _parse_arguments(self, remain):
         """Parse raw command-line argument values."""
         values = []
-        for argument, value in itertools.zip_longest(self._arguments, remain):
+        for argument, value in zip_longest(self._arguments, remain):
             argument = argument or self._vararg
             if argument is None:
                 raise error.TooManyArguments("Too many arguments.")

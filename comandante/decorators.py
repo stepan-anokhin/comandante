@@ -42,3 +42,18 @@ def option(name, short, type, default, descr=''):
         return element
 
     return decorator
+
+
+def signature(**types):
+    """Set command argument types.
+
+    :param types: mapping from arg name to arg type
+    :return: a new decorator setting the arg types on Command
+    """
+
+    def decorator(element):
+        """Decorator setting argument types."""
+        element.signature.set_types(types)
+        return element
+
+    return decorator
