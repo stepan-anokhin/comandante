@@ -83,9 +83,13 @@ class OptionTests(unittest.TestCase):
         default = App.test_merge.default_options()
         self.assertEqual(default, {'flag': False, 'some': 0})
 
-    def test_unknown_option(self):
+    def test_unknown_long_option(self):
         with suppress_output():
             self.assertRaises(error.UnknownOption, App().test_merge.invoke, ['--unknown'])
+
+    def test_unknown_short_option(self):
+        with suppress_output():
+            self.assertRaises(error.UnknownOption, App().test_merge.invoke, ['-u'])
 
     def test_invalid_option_value(self):
         with suppress_output():

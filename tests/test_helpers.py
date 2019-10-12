@@ -1,9 +1,9 @@
 import unittest
 
-from comandante.inner.helpers import describe
+from comandante.inner.helpers import describe, getname
 
 
-class DescribeTests(unittest.TestCase):
+class HelpersTests(unittest.TestCase):
     def test_empty_doc(self):
         def no_docs():
             pass
@@ -117,3 +117,11 @@ class DescribeTests(unittest.TestCase):
         brief, descr = describe(leading_blank_lines)
         self.assertEqual(brief, "Brief description")
         self.assertEqual(descr, "Long description")
+
+    def test_getname_value(self):
+        def func(): pass
+
+        self.assertEqual(getname(func), 'func')
+
+    def test_getname_nameless(self):
+        self.assertRaises(ValueError, getname, "nameless")

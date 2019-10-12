@@ -77,3 +77,23 @@ class BasicTests(unittest.TestCase):
     def test_command_use_global_option(self):
         result = App().invoke('command -g -l 42'.split())
         self.assertEqual(result, {'global': True, 'local': 42})
+
+    def test_handler_has_empty_doc(self):
+        handler = cli.Handler()
+        self.assertEqual(handler.brief, '')
+        self.assertEqual(handler.descr, '')
+
+    def test_duplicate_command(self):
+        self.assertRaises(RuntimeError, App().declare_command, 'subcommand', SubCommand())
+
+    def test_duplicate_global_option_long_name(self):
+        self.assertRaises(RuntimeError, App().declare_option, 'global', 'unique', int, 0)
+
+    def test_duplicate_global_option_short_name(self):
+        self.assertRaises(RuntimeError, App().declare_option, 'unique', 'g', int, 0)
+
+    def test_duplicate_local_option_long_name(self):
+        self.assertRaises(RuntimeError, App().command.declare_option, 'local', 'unique', int, 0)
+
+    def test_duplicate_local_option_short_name(self):
+        self.assertRaises(RuntimeError, App().command.declare_option, 'unique', 'l', int, 0)
