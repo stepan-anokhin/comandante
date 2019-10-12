@@ -136,8 +136,11 @@ class HelpWriter:
         if not element.declared_options:
             return
 
-        declared_options = element.declared_options.values()
-        summarized_options = map(self.summarize_option, declared_options)
+        summarized_options = list()
+        for name in sorted(element.declared_options.keys()):
+            option = element.declared_options[name]
+            summarized_options.append(self.summarize_option(option))
+
         return self.section(heading="options", paragraphs=chain(*summarized_options))
 
     def section(self, heading, paragraphs, delimiter='\n\n'):
