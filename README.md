@@ -27,8 +27,6 @@ Comandante is a toolkit for building command-line interfaces in Python.
 
 ## Installation
 
-### **NOTE**: Currently PyPI contains an empty implementation to occupy the name. This will be changed very soon (in a week or so). 
-
 To get the latest release simply install it with a `pip`:
 
 ```shell
@@ -94,13 +92,6 @@ So in other words to create a command-line interface you simply:
 
 ### Just a Normal Classes and Methods
 No surprises! Handlers and commands are just a normal classes and methods.
-
-So in the example above you may simply call `CliTool#sum` as usual: 
-```python
-tool = CliTool()
-result = tool.sum(1, 2)
-assert result == 3
-```
 
 ## Options
 Command options are declared with `@comandante.option(...)` decorator. 

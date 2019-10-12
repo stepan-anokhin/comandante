@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="comandante",
-    version="0.0.1",
+    version="0.0.3",
     author="Stepan Anokhin",
     author_email="stepan.anokhin@gmail.com",
     description="A toolkit for building command-line interfaces",
