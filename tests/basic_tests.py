@@ -13,7 +13,7 @@ class SubCommand(cli.Handler):
 
 class App(cli.Handler):
     def __init__(self):
-        super().__init__()
+        super(App, self).__init__()
 
         self.declare_option('global', 'g', bool, False)
         self.declare_command('subcommand', SubCommand())

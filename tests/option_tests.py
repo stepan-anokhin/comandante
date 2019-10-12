@@ -108,7 +108,7 @@ class OptionTests(unittest.TestCase):
             with capture_output() as (out, err):
                 App().test_merge.invoke(['--unknown'])
         except error.UnknownOption as e:
-            self.assertIn(str(e), out.getvalue())
+            self.assertIn(str(e), str(out.getvalue()))
             self.assertIn('--unknown', str(e))
 
     def test_help_on_option_error(self):

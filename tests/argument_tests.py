@@ -6,12 +6,14 @@ from comandante.inner.test import suppress_output, capture_output
 
 
 class App(cli.Handler):
+    @cli.signature(int_arg=int)
     @cli.command()
-    def test_int(self, int_arg: int):
+    def test_int(self, int_arg):
         return int_arg
 
+    @cli.signature(bool_arg=bool, int_arg=int)
     @cli.command()
-    def test_types(self, str_arg, bool_arg: bool, int_arg: int):
+    def test_types(self, str_arg, bool_arg, int_arg):
         return str_arg, bool_arg, int_arg
 
     @cli.command()
@@ -22,8 +24,9 @@ class App(cli.Handler):
     def test_no_arguments(self):
         return 'success'
 
+    @cli.signature(vararg=int)
     @cli.command()
-    def test_vararg(self, required, optional='default', *vararg: int):
+    def test_vararg(self, required, optional='default', *vararg):
         return required, optional, vararg
 
 
