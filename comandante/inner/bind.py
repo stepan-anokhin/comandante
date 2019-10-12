@@ -42,11 +42,6 @@ class BoundCommand(Proxy):
         return self.command.invoke(self._handler, *args, **kwargs)
 
     @property
-    def handler(self):
-        """Handler to which the command is bound."""
-        return self._handler
-
-    @property
     def command(self):
         """Get underlying bound command."""
         return self._target

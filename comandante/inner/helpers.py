@@ -12,11 +12,6 @@ import inspect
 from comandante.inner.output.markup import Markup
 
 
-def isblank(line):
-    """Check if the line is blank"""
-    return line.isspace() or len(line) == 0
-
-
 def describe(o):
     """Describe object using its documentation.
 
