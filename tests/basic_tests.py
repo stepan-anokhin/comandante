@@ -31,7 +31,9 @@ class BasicTests(unittest.TestCase):
         app = App()
         with capture_output() as (out, err):
             app.invoke([])
-        self.assertEqual(app.full_doc(), out.getvalue().rstrip())
+        full_doc = app.full_doc().rstrip()
+        invoke_output = out.getvalue().rstrip()
+        self.assertEqual(invoke_output, full_doc)
 
     def test_unknown_command(self):
         with suppress_output():
@@ -43,7 +45,8 @@ class BasicTests(unittest.TestCase):
             app.invoke('help subcommand command'.split())
         output = out.getvalue().rstrip()
         full_name = 'app subcommand command'.split()
-        self.assertEqual(output, app.subcommand.command.full_doc(full_name))
+        full_doc = app.subcommand.command.full_doc(full_name).rstrip()
+        self.assertEqual(output, full_doc)
 
     def test_help_on_unknown_subcommand(self):
         app = App()
