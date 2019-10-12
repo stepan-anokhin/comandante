@@ -135,9 +135,9 @@ class Handler:
         :param descr: option description
         """
         if name in self.declared_options:
-            raise ValueError("Duplicate option name: '--{name}'".format(name=name))
+            raise RuntimeError("Duplicate option name: '--{name}'".format(name=name))
         if short in self._short_options:
-            raise ValueError("Duplicate option name: '-{name}'".format(name=short))
+            raise RuntimeError("Duplicate option name: '-{name}'".format(name=short))
         option = Option(name=name, short=short, type=type, default=default, descr=descr)
         self._declared_options[option.name] = option
         self._short_options.add(short)
