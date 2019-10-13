@@ -149,7 +149,7 @@ class DatabaseCli(cli.Handler):
         value = input(question).lower()
         while value not in ['', 'n', 'y']:
             print("Please answer 'y' or 'n'")
-            value = input(question)
+            value = input(question).lower()
         return value == 'y'
 
 
