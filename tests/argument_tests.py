@@ -67,7 +67,7 @@ class ArgumentTests(unittest.TestCase):
 
     def test_argument_invalid_value(self):
         with suppress_output():
-            self.assertRaises(error.InvalidValue, App().test_int.invoke, 'test_int invalid'.split())
+            self.assertRaises(error.InvalidArgumentValue, App().test_int.invoke, 'test_int invalid'.split())
 
     def test_argument_missing_value(self):
         with suppress_output():
@@ -81,7 +81,7 @@ class ArgumentTests(unittest.TestCase):
         try:
             with capture_output() as (out, err):
                 App().test_int.invoke('invalid'.split())
-        except error.InvalidValue as e:
+        except error.InvalidArgumentValue as e:
             self.assertIn(str(e), out.getvalue())
             self.assertIn('int_arg', str(e))
 
@@ -89,5 +89,5 @@ class ArgumentTests(unittest.TestCase):
         try:
             with capture_output() as (out, err):
                 App().test_int.invoke('invalid'.split())
-        except error.InvalidValue as e:
+        except error.InvalidArgumentValue as e:
             self.assertIn(App().test_int.full_doc(), out.getvalue())

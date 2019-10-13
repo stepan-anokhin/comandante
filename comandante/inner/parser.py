@@ -9,9 +9,9 @@ to the command line description in terms of domain model.
 """
 
 import sys
+from collections import deque
 
 import comandante.errors as error
-from comandante.inner.helpers import getname
 
 if sys.version_info > (3, 0):
     from itertools import zip_longest
@@ -27,110 +27,102 @@ class Parser:
     interpret command-line arguments accordingly.
     """
 
-    def __init__(self, options, arguments, vararg):
+    def __init__(self, signature, declared_options):
         """Initialize instance.
 
-        :param options: command options
-        :param arguments: command arguments (order is essential)
-        :param vararg: var-arg descriptor (could be `None`)
+        :param signature: command signature
+        :param declared_options: declared options
         """
-        self._arguments = tuple(arguments)
-        self._vararg = vararg
-        self._opt_names = {}
-        self._opt_short_names = {}
-        for option in options:
-            self._opt_names[option.name] = option
-            self._opt_short_names[option.short] = option
+        self._signature = signature
+        self._long_options, self._short_options = {}, {}
+        for option in declared_options:
+            self._long_options[option.name] = option
+            self._short_options[option.short] = option
 
-    # TODO: specify exact cli-arguments format
-    # [command-name] [options] [arguments] [var-arg...]
-    def parse(self, argv):
+    @staticmethod
+    def more_options(cli_arguments):
+        """Check if the cli argument sequence begins with option."""
+        return len(cli_arguments) > 0 and cli_arguments[0].startswith('-')
+
+    def parse(self, cli_arguments):
         """Parse command line arguments.
 
-        :param argv: command line arguments
-        :return: option and argument values
+        :param cli_arguments: raw command line arguments sequence
+
+        :return: (options, arguments) tuple
         """
-        options, rest = self._parse_options(argv)
-        arguments = self._parse_arguments(rest)
+        cli_arguments = self._make_deque(cli_arguments)
+        options = self._parse_options(cli_arguments)
+        arguments = self._parse_arguments(cli_arguments)
         return options, arguments
 
-    def _parse_options(self, argv):
+    @staticmethod
+    def _make_deque(cli_arguments):
+        if not isinstance(cli_arguments, deque):
+            return deque(cli_arguments)
+        return cli_arguments
+
+    @staticmethod
+    def _parse_long_option(equation):
+        if '=' not in equation:
+            return equation[2:], None
+        return equation[2:].split('=', 1)
+
+    def _parse_options(self, cli_arguments):
         """Parse options.
 
-        :param argv: a list containing raw command-line arguments
+        :param cli_arguments: a list containing raw command-line arguments
         :return: a dict containing option values and remaining command-line arguments
         """
         options = {}
-        remain = list(reversed(argv))
-        while self._more_options(remain):
-            name, value = self._parse_option(remain)
+        while self.more_options(cli_arguments):
+            name, value = self._parse_option(cli_arguments)
             if name in options:
-                raise error.DuplicateOption("Duplicated option: '{name}'".format(name=name))
+                raise error.DuplicateOption(name)
             options[name] = value
 
-        return options, reversed(remain)
+        return options
 
-    @staticmethod
-    def _more_options(remain):
-        """Check if the remaining cli-arguments contain options."""
-        return len(remain) > 0 and (remain[-1].startswith('--') or remain[-1].startswith('-'))
-
-    def _parse_option(self, remain):
+    def _parse_option(self, cli_arguments):
         """Parse a single option from the remaining raw command-line arguments"""
-        option = self._get_option(remain)
-        value = self._parse_option_value(option, remain)
+        option = self._get_option(cli_arguments)
+        parser = self._get_option_parser(option)
+        value = parser(cli_arguments)
         return option.name, value
 
-    def _get_option(self, remain):
-        """Determine option from the remaining raw command-line arguments."""
-        argument = remain.pop()
-        if argument.startswith('--'):
-            option_name = argument[2:]
-            if option_name not in self._opt_names:
-                raise error.UnknownOption("Unknown option: '{option}'".format(option=argument))
-            return self._opt_names[option_name]
-        elif argument.startswith('-'):
-            option_name = argument[1:]
-            if option_name not in self._opt_short_names:
-                raise error.UnknownOption("Unknown option: '{option}'".format(option=argument))
-            return self._opt_short_names[option_name]
+    def _get_option(self, cli_arguments):
+        """Get option given the remaining cli-arguments."""
+        if not cli_arguments:
+            raise RuntimeError('Empty CLI arguments')
+        if not self.more_options(cli_arguments):
+            raise RuntimeError("CLI arguments doesn't contain options")
+
+        first = cli_arguments.popleft()
+        if first.startswith('--'):
+            name, value = self._parse_long_option(first)
+            if name not in self._long_options:
+                raise error.UnknownOption(first)
+            if value is not None:
+                cli_arguments.appendleft(value)
+            return self._long_options[name]
+        elif first.startswith('-'):
+            name = first[1:]
+            if name not in self._short_options:
+                raise error.UnknownOption(first)
+            return self._short_options[name]
         else:
-            raise RuntimeError("Cannot read option. Remaining arguments: {args}".format(args=list(reversed(remain))))
+            RuntimeError("Expected CLI-option name")
 
-    def _parse_option_value(self, option, remain):
-        """Parse option value from the given raw cli-arguments stack."""
-        parse = self._get_option_parser(option)
-        return parse(remain)
-
-    @staticmethod
-    def _get_option_parser(option):
-        """Get option value parser."""
-        if option.type is bool:
-            return lambda remain: True
-
-        def parser(remain):
-            """Generic option value parser."""
-            if len(remain) == 0:
-                raise error.MissingOptionValue("Option '{name}' is missing its argument".format(name=option.name))
-            value = remain.pop()
-            try:
-                return option.type(value)
-            except ValueError:
-                pattern = "Invalid value for option '{name}' of type '{type}': '{value}'"
-                message = pattern.format(name=option.name, value=value, type=option.type.__name__)
-                raise error.InvalidValue(message)
-
-        return parser
-
-    def _parse_arguments(self, remain):
+    def _parse_arguments(self, cli_arguments):
         """Parse raw command-line argument values."""
+
         values = []
-        for argument, value in zip_longest(self._arguments, remain):
-            argument = argument or self._vararg
+        for argument, value in zip_longest(self._signature.arguments, cli_arguments):
+            argument = argument or self._signature.vararg
             if argument is None:
-                raise error.TooManyArguments("Too many arguments.")
+                raise error.TooManyArguments()
             if argument.is_required() and value is None:
-                raise error.ArgumentMissing("Required argument is not specified: '{name}'".format(name=argument.name))
+                raise error.ArgumentMissing(argument)
             if not argument.is_required() and value is None:
                 values.append(argument.default)
                 continue
@@ -139,18 +131,65 @@ class Parser:
         return values
 
     @staticmethod
+    def _make_generic_argument_parser(argument):
+        """Generic argument parser factory."""
+
+        def parser(value):
+            """Generic argument parser."""
+            try:
+                return argument.type(value)
+            except ValueError:
+                raise error.InvalidArgumentValue(argument, value)
+
+        return parser
+
+    @staticmethod
+    def _make_bool_argument_parser(argument):
+        """Bool argument parser factory."""
+
+        def parser(value):
+            """Bool argument parser."""
+            if value == argument.name:
+                return True
+            if value.lower() == 'true':
+                return True
+            if value.lower() == 'false':
+                return False
+            raise error.InvalidArgumentValue(argument, value)
+
+        return parser
+
+    @staticmethod
     def _get_argument_parser(argument):
         """Get a function parsing a raw argument value from the command-line."""
         if argument.type is bool:
-            return lambda value: value == argument.name
+            return Parser._make_bool_argument_parser(argument)
+        return Parser._make_generic_argument_parser(argument)
 
-        def parser(value):
-            """Parse argument value."""
+    @staticmethod
+    def _bool_option_parser(_):
+        """Bool option parser factory."""
+        return True
+
+    @staticmethod
+    def _make_generic_option_parser(option):
+        """Generic option parser factory."""
+
+        def parser(cli_arguments):
+            """Generic option parser."""
+            if not cli_arguments:
+                raise error.MissingOptionValue(option)
+            raw_value = cli_arguments.popleft()
             try:
-                return argument.type(value)
-            except ValueError as e:
-                error_pattern = "Invalid value for argument '{name}' of type '{type}': '{value}'"
-                error_message = error_pattern.format(name=argument.name, type=getname(argument.type), value=value)
-                raise error.InvalidValue(error_message)
+                return option.type(raw_value)
+            except ValueError:
+                raise error.InvalidOptionValue(option, raw_value)
 
         return parser
+
+    @staticmethod
+    def _get_option_parser(option):
+        """Get option value parser."""
+        if option.type is bool:
+            return Parser._bool_option_parser
+        return Parser._make_generic_option_parser(option)

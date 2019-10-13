@@ -27,7 +27,7 @@ class OptionTests(unittest.TestCase):
         self.assertEqual(result, {})
 
     def test_option_value(self):
-        result = App().invoke('test --some 42'.split())
+        result = App().invoke('test --some=42'.split())
         self.assertEqual(result, {'some': 42})
 
     def test_boolean_option(self):
@@ -43,7 +43,7 @@ class OptionTests(unittest.TestCase):
         self.assertEqual(result, {'flag': True})
 
     def test_mixed_syntax(self):
-        result = App().invoke('test -f --some 42'.split())
+        result = App().invoke('test -f --some=42'.split())
         self.assertEqual(result, {'flag': True, 'some': 42})
 
     def test_merge_options_default_only(self):
@@ -51,21 +51,21 @@ class OptionTests(unittest.TestCase):
         self.assertEqual(result, App.test_merge.default_options())
 
     def test_merge_options_some_specified(self):
-        result = App().invoke('test_merge --some 42'.split())
+        result = App().invoke('test_merge --some=42'.split())
         default = App.test_merge.default_options()
         self.assertEqual(result, {'some': 42, 'flag': default.flag})
 
     def test_merge_options_all_specified(self):
-        result = App().invoke('test_merge --some 42 --flag'.split())
+        result = App().invoke('test_merge --some=42 --flag'.split())
         self.assertEqual(result, {'some': 42, 'flag': True})
 
     def test_merge_options_attr_access(self):
-        options = App().invoke('test_merge --some 42 --flag'.split())
+        options = App().invoke('test_merge --some=42 --flag'.split())
         self.assertEqual(options.some, 42)
         self.assertEqual(options.flag, True)
 
     def test_merge_options_is_specified(self):
-        options = App().invoke('test_merge --some 42'.split())
+        options = App().invoke('test_merge --some=42'.split())
         self.assertTrue(options.is_specified('some'))
         self.assertFalse(options.is_specified('flag'))
 
@@ -93,7 +93,7 @@ class OptionTests(unittest.TestCase):
 
     def test_invalid_option_value(self):
         with suppress_output():
-            self.assertRaises(error.InvalidValue, App().test_merge.invoke, '--some invalid-value'.split())
+            self.assertRaises(error.InvalidOptionValue, App().test_merge.invoke, '--some=invalid-value'.split())
 
     def test_missing_option_value(self):
         with suppress_output():

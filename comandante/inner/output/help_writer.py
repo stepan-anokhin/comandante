@@ -213,4 +213,4 @@ class HelpWriter:
         """Get option synopsis pattern."""
         if option.type is bool:
             return "-{short}, --{long}"
-        return "-{short} <{type}>, --{long} <{type}>"
+        return "-{short} <{type}>, --{long}=<{type}>"

@@ -468,7 +468,7 @@ class Command(object):
         """Invoke command with the raw command-line arguments."""
         context = context or (self.name,)
         try:
-            parser = Parser(self.declared_options.values(), self.signature.arguments, self.signature.vararg)
+            parser = Parser(self.signature, self.declared_options.values())
             options, arguments = parser.parse(argv)
         except CliSyntaxException as e:
             print(e)
