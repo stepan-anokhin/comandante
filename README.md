@@ -34,7 +34,7 @@ Comandante is a toolkit for building command-line interfaces in Python.
 To get the latest release simply install it with a `pip`:
 
 ```shell
-pip3 install --upgrade comandante
+pip install --upgrade comandante
 ```
 
 ## Getting Started
@@ -48,43 +48,57 @@ rich command-line interfaces (CLI) in Python extremely simple
 and straightforward. 
 
 ### Example
-Here is a simple example:
+Here is a simple example in **Python3**:
 ```python
 #!/usr/bin/env python3
+# content of 'tool' file
 import sys, comandante as cli
 
-# Define a new CLI handler as a `cli.Handler` subclass
+
 class CliTool(cli.Handler):
 
-    # define CLI commands as methods decorated with `@cli.command()` 
-    @cli.command()
-    def repeat(self, message, times: int):
-        for i in range(times):
-            print(message)
-           
     @cli.command() 
     def sum(self, a: int, b: int):
-        result = a + b
-        print(result)
-        return result
+        print(a + b)
+        
+    @cli.command() 
+    def sub(self, a: int, b: int):
+        print(a - b)
             
-# Then simply pass command-line arguments to the CliTool#invoke
+
+CliTool().invoke(sys.argv[1:])
+```
+The same in **Python2**:
+```python
+#!/usr/bin/env python3
+# content of 'tool' file
+import sys, comandante as cli
+
+
+class CliTool(cli.Handler):
+
+    @cli.signature(a=int, b=int)
+    @cli.command() 
+    def sum(self, a, b):
+        print(a + b)
+        
+    @cli.signature(a=int, b=int)
+    @cli.command() 
+    def sub(self, a, b):
+        print(a - b)
+            
+
 CliTool().invoke(sys.argv[1:])
 ```
 
-That's it! 
-
-To execute `repeat` command simply run `./tool repeat` with its required arguments:
-```shell
-$ ./tool repeat "Hello world" 2
-Hello world
-Hello world
-```
-
-The same goes for any defined command-methods: 
+That's it! Now let's try it in shell:
 ```shell
 $ ./tool sum 21 21
 42
+```
+```shell
+$ ./tool sub 5 7
+-2
 ```
 So in other words to create a command-line interface you simply:
  * define a normal Python class (inherited from the `comandante.Handler`)
