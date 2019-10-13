@@ -66,10 +66,10 @@ class Handler(object):
             return
         command_name, argv = argv[0], argv[1:]
         if command_name not in self._declared_commands:
-            error_message = "Unknown command: '{name}'".format(name=' '.join(context + (command_name,)))
-            print(error_message)
+            error = UnknownCommand(command=' '.join(context + (command_name,)))
+            print(error)
             self.help()
-            raise UnknownCommand(error_message)
+            raise error
 
         command = self._declared_commands.get(command_name, self.help)
         return command.invoke(argv, context + (command_name,))
