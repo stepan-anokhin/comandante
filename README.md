@@ -4,7 +4,7 @@
 </p>
 
 Comandante is a toolkit for building command-line interfaces in Python.
-[Thor](https://github.com/erikhuda/thor) equivalent for Python.
+The closest [Thor](https://github.com/erikhuda/thor) equivalent for Python.
 
 [![Build Status](https://travis-ci.org/stepan-anokhin/comandante.svg?branch=master)](https://travis-ci.org/stepan-anokhin/comandante)
 [![Coverage Status](https://coveralls.io/repos/github/stepan-anokhin/comandante/badge.svg?branch=master)](https://coveralls.io/github/stepan-anokhin/comandante?branch=master)
@@ -28,6 +28,7 @@ Comandante is a toolkit for building command-line interfaces in Python.
 - [Printing Help](#printing-help)
 - [Error Handling](#error-handling)
 - [Testing Your CLI](#testing-your-cli)
+- [Alternatives](#alternatives)
 
 ## Installation
 
@@ -503,3 +504,15 @@ class DatabaseCliTests(TestCase):
 
         fake_database.drop.assert_not_called()
 ```
+
+## Alternatives
+
+Comandante is a great way to build command-line interfaces. 
+But it's not the only one! 
+
+Here is a list of some alternatives:
+
+* [Fire](https://github.com/google/python-fire)
+* [click](https://click.palletsprojects.com/en/7.x/)
+* [argparse](https://docs.python.org/3/library/argparse.html)
+* [getopt](https://docs.python.org/3.1/library/getopt.html)
